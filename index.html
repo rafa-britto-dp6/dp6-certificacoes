@@ -753,7 +753,9 @@
 
 <script>
 // ── CONFIG ───────────────────────────────────────────────────────────────────
-const GAS_URL = 'https://script.google.com/a/macros/dp6.com.br/s/AKfycbxVDsD4kq660ScRaLJJJxbmMmod8hfy37GeWhc39D-9dOB9E9HkOEE9KB_JzCSZcwNRYw/exec';
+const JSONBIN_ID  = '69ac371fd0ea881f40f92b30';
+const JSONBIN_KEY = '$2a$10$9j2ZMJkhIQLEYYTpP4.TJ.4.SGIqKiVSEeQ1eYTzEoSfbWOJBvmdi';
+const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID;
 const STORAGE_KEY = 'dp6_store_v2'; // fallback cache
 
 // ── DP6 MODAL (replaces native alert/confirm) ─────────────────────────────────
@@ -857,41 +859,40 @@ function currentData() { return store.years[currentYear()] || {q1:[],q2:[],q3:[]
 // ── SHEETS API ────────────────────────────────────────────────────────────────
 async function loadFromSheets() {
   showMainLoading();
-  // Show cached data immediately while fetching
   const cached = getCached();
   if (cached) { store = cached; updateYearUI(); renderMain(); }
 
   try {
-    const res = await fetch(GAS_URL + '?action=load&t=' + Date.now());
+    const res = await fetch(JSONBIN_URL + '/latest', {
+      headers: { 'X-Master-Key': JSONBIN_KEY, 'X-Bin-Meta': 'false' }
+    });
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    const json = await res.json();
-    if (!json.ok) throw new Error(json.error || 'Sheets error');
-    store = json.store;
+    const data = await res.json();
+    store = data;
     setCache(store);
     updateYearUI();
     renderMain();
     hideMainLoading();
   } catch(e) {
-    console.error('Sheets load error:', e);
-    if (!cached) {
-      // Nothing cached — show empty state with error
-      store = emptyStore();
-      renderMain();
-    }
+    console.error('JSONBin load error:', e);
+    if (!cached) { store = emptyStore(); renderMain(); }
     showMainError('Não foi possível carregar dados do servidor. Exibindo dados em cache.');
   }
 }
 
 async function saveStore() {
-  setCache(store); // save locally immediately
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ action: 'save', store })
+  setCache(store);
+  const res = await fetch(JSONBIN_URL, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Master-Key': JSONBIN_KEY
+    },
+    body: JSON.stringify(store)
   });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const json = await res.json();
-  if (!json.ok) throw new Error(json.error || 'Save error');
+  if (!json.record) throw new Error('JSONBin save failed');
 }
 
 function showMainLoading() {
