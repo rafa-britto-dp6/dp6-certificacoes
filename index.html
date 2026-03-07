@@ -949,7 +949,7 @@ function initData() {
   store = getCached() || emptyStore(); // ensure store is never empty on init
   updateYearUI();
   renderMain();
-  loadFromSheets(); // then refresh from Sheets in background
+  loadFromSupabase(); // then refresh from Sheets in background
 }
 
 function updateYearUI() {
