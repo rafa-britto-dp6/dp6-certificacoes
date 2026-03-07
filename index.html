@@ -6,6 +6,7 @@
   <title id="page-title">DP6 — Cronograma de Certificações</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     :root {
       --bg-deep:    #0a1520;
@@ -656,18 +657,14 @@
 <script>
 // ══════════════════════════════════════════════════════════════════════════════
 // ⚙️  CONFIGURAÇÃO — substitua pelos seus valores do Supabase
-//     Supabase → Settings → API → Project URL + anon public key
+//     Supabase → Settings → API Keys → Project URL + anon (legacy) key
 // ══════════════════════════════════════════════════════════════════════════════
-const SUPABASE_URL = 'https://hplbcjaadmtzubruzufy.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwbGJjamFhZG10enVicnV6dWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4OTYyNjEsImV4cCI6MjA4ODQ3MjI2MX0.46f4P6INIvh6q5RTo20ZdF7CBA_A2y9mTgNxK93cylE';
+const SUPABASE_URL     = 'https://SEU_PROJECT_ID.supabase.co';
+const SUPABASE_ANON_KEY = 'SUA_ANON_KEY_AQUI';
 // ══════════════════════════════════════════════════════════════════════════════
 
-const SB_HEADERS = {
-  'apikey': SUPABASE_ANON_KEY,
-  'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-  'Content-Type': 'application/json',
-  'Prefer': 'return=representation'
-};
+// SDK oficial — resolve CORS automaticamente
+const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const STORAGE_KEY = 'dp6_store_v3';
 const QUARTER_META = [
@@ -745,12 +742,11 @@ function setConnBadge(state) {
   isConnected = state === 'online';
 }
 
-// ── SUPABASE API ──────────────────────────────────────────────────────────────
+// ── SUPABASE API (via SDK — sem CORS) ────────────────────────────────────────
 async function loadFromSupabase(showFeedback = false) {
   setConnBadge('loading');
   showMainLoading();
 
-  // Load from cache immediately so UI doesn't wait
   const cached = getCached();
   if (cached && !showFeedback) {
     store = cached;
@@ -759,15 +755,15 @@ async function loadFromSupabase(showFeedback = false) {
   }
 
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/dp6_store?id=eq.1&select=data`,
-      { headers: SB_HEADERS }
-    );
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const rows = await res.json();
-    if (!rows.length) throw new Error('No data in Supabase');
+    const { data, error } = await _sb
+      .from('dp6_store')
+      .select('data')
+      .eq('id', 1)
+      .single();
 
-    store = rows[0].data;
+    if (error) throw new Error(error.message);
+
+    store = data.data;
     setCache(store);
     updateYearUI();
     renderMain();
@@ -782,14 +778,10 @@ async function loadFromSupabase(showFeedback = false) {
   } catch(e) {
     console.error('Supabase load error:', e);
     setConnBadge('offline');
-    if (!cached) {
-      store = emptyStore();
-      updateYearUI();
-      renderMain();
-    }
+    if (!cached) { store = emptyStore(); updateYearUI(); renderMain(); }
     hideMainLoading();
     if (showFeedback) {
-      dp6Alert('Não foi possível conectar ao Supabase. Verifique a URL e a chave anon nas configurações do arquivo HTML.', 'Erro de conexão', '⚠️');
+      dp6Alert('Não foi possível conectar ao Supabase. Verifique a URL e a chave nas configurações do arquivo HTML.', 'Erro de conexão', '⚠️');
     } else {
       showMainError('Usando dados em cache. Verifique a conexão com o Supabase.');
     }
@@ -797,18 +789,13 @@ async function loadFromSupabase(showFeedback = false) {
 }
 
 async function saveToSupabase() {
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/dp6_store?id=eq.1`,
-    {
-      method: 'PATCH',
-      headers: SB_HEADERS,
-      body: JSON.stringify({ data: store })
-    }
-  );
-  if (!res.ok) {
-    const errBody = await res.text();
-    throw new Error(`HTTP ${res.status}: ${errBody}`);
-  }
+  const { error } = await _sb
+    .from('dp6_store')
+    .update({ data: store })
+    .eq('id', 1);
+
+  if (error) throw new Error(error.message);
+
   setCache(store);
   lastSyncTime = new Date();
   const lbl = document.getElementById('last-sync-label');
