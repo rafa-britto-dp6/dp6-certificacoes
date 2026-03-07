@@ -596,7 +596,7 @@
 
 <section class="hero">
   <div class="hero-glow"></div>
-  <div class="hero-eyebrow">Cronograma Interno · 2025</div>
+  <div class="hero-eyebrow">Cronograma Interno · <span id="hero-eyebrow-year">2026</span></div>
   <h1>Certificações<br/><span id="hero-year-display">DP6 2026</span></h1>
   <p>Acompanhe todas as certificações do ano, organizadas por trimestre. Clique em um card para acessar o link de inscrição.</p>
 </section>
@@ -604,7 +604,7 @@
 <div id="main-status" style="display:none;text-align:center;padding:.6rem 1rem;font-size:.8rem;position:sticky;top:64px;z-index:50;background:rgba(10,21,32,0.95);border-bottom:1px solid var(--border-mid)"></div>
 <main id="quarters-container"></main>
 
-<footer>Portal interno &nbsp;·&nbsp; <img src="https://dp6.github.io/assets/img/logo-dp6.png" alt="DP6" style="height:14px;vertical-align:middle;opacity:0.6;margin:0 2px"/> &nbsp;·&nbsp; 2025</footer>
+<footer>Portal interno &nbsp;·&nbsp; <img src="https://dp6.github.io/assets/img/logo-dp6.png" alt="DP6" style="height:14px;vertical-align:middle;opacity:0.6;margin:0 2px"/> &nbsp;·&nbsp; <span id="footer-year">2026</span></footer>
 
 <!-- CERT MODAL -->
 <div class="modal-overlay" id="cert-modal" onclick="closeCertModalBg(event)">
@@ -909,7 +909,10 @@ function showMainError(msg) {
 }
 
 function initData() {
-  loadFromSheets();
+  store = getCached() || emptyStore(); // ensure store is never empty on init
+  updateYearUI();
+  renderMain();
+  loadFromSheets(); // then refresh from Sheets in background
 }
 
 function updateYearUI() {
@@ -917,6 +920,10 @@ function updateYearUI() {
   document.getElementById('year-badge-display').textContent = y;
   document.getElementById('hero-year-display').textContent = 'DP6 ' + y;
   document.title = 'DP6 — Cronograma de Certificações ' + y;
+  const eyebrow = document.getElementById('hero-eyebrow-year');
+  if (eyebrow) eyebrow.textContent = y;
+  const footer = document.getElementById('footer-year');
+  if (footer) footer.textContent = y;
   const inp = document.getElementById('year-input');
   if (inp) inp.value = y;
 }
@@ -1005,7 +1012,8 @@ function closeAdmin(){document.getElementById('admin-overlay').classList.remove(
 function closeAdminBg(e){if(e.target===document.getElementById('admin-overlay'))closeAdmin();}
 
 function checkAdminPass(){
-  if(document.getElementById('admin-password').value === (store.adminPass||'dp6admin2025')){
+  const correctPass = (store && store.adminPass) ? store.adminPass : 'dp6admin2025';
+  if(document.getElementById('admin-password').value === correctPass){
     adminAuthed=true;
     document.getElementById('admin-login').style.display='none';
     document.getElementById('admin-management').style.display='flex';
@@ -1131,27 +1139,26 @@ function switchAdminTab(tab, el) {
 }
 
 // ── YEAR ─────────────────────────────────────────────────────────────────────
-function saveYear() {
+async function saveYear() {
   const newYear = String(document.getElementById('year-input').value).trim();
   if(!/^[0-9]{4}$/.test(newYear)) { dp6Alert('Informe um ano válido com 4 dígitos (ex: 2027).','Ano inválido','⚠️'); return; }
   const current = currentYear();
   if(newYear === current) { dp6Alert('O ano ' + newYear + ' já é o ano ativo.','Sem alteração','ℹ️'); return; }
-  dp6Confirm(`O cronograma de ${current} será arquivado e os trimestres de ${newYear} começarão vazios.`, `Ativar ${newYear}?`, '📅').then(async ok => {
-    if(!ok) return;
-    store.archive = store.archive || {};
-    const snapshot = JSON.parse(JSON.stringify(currentData()));
-    snapshot._archivedAt = new Date().toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-    store.archive[current] = snapshot;
-    store.years[newYear] = { q1:[], q2:[], q3:[], q4:[] };
-    store.activeYear = newYear;
-    await saveStoreWithFeedback();
-    updateYearUI();
-    renderMain();
-    renderAdminPanel();
-    renderArchive();
-    renderBank();
-    dp6Alert(`O cronograma de ${current} foi arquivado. Aloque as certificações nos trimestres de ${newYear}.`, `Ano ${newYear} ativado!`, '🎉');
-  });
+  const ok = await dp6Confirm(`O cronograma de ${current} será arquivado e os trimestres de ${newYear} começarão vazios.`, `Ativar ${newYear}?`, '📅');
+  if(!ok) return;
+  store.archive = store.archive || {};
+  const snapshot = JSON.parse(JSON.stringify(currentData()));
+  snapshot._archivedAt = new Date().toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  store.archive[current] = snapshot;
+  store.years[newYear] = { q1:[], q2:[], q3:[], q4:[] };
+  store.activeYear = newYear;
+  await saveStoreWithFeedback();
+  updateYearUI();
+  renderMain();
+  renderAdminPanel();
+  renderArchive();
+  renderBank();
+  dp6Alert(`O cronograma de ${current} foi arquivado. Aloque as certificações nos trimestres de ${newYear}.`, `Ano ${newYear} ativado!`, '🎉');
 }
 
 // ── PASS ──────────────────────────────────────────────────────────────────────
@@ -1236,12 +1243,13 @@ async function bankSaveEdit(id) {
 }
 
 async function bankDeleteCert(id) {
-  dp6Confirm('Esta certificação será removida do banco e de todos os trimestres.','Remover certificação','🗑️').then(ok=>{ if(!ok) return;
+  const ok = await dp6Confirm('Esta certificação será removida do banco e de todos os trimestres.','Remover certificação','🗑️');
+  if(!ok) return;
   store.bank = store.bank.filter(c=>c.id!==id);
   const yr = currentData();
   ['q1','q2','q3','q4'].forEach(q=>{ yr[q]=(yr[q]||[]).filter(c=>c.id!==id); });
-  await saveStoreWithFeedback(); renderBank(); renderAdminPanel(); renderMain();
-  });
+  await saveStoreWithFeedback();
+  renderBank(); renderAdminPanel(); renderMain();
 }
 
 function renderBank() {
@@ -1360,12 +1368,12 @@ function viewArchiveYear(y) {
   document.getElementById('dp6-modal').classList.add('active');
 }
 
-function deleteArchiveYear(y) {
-  dp6Confirm(`O cronograma de ${y} será excluído permanentemente e não poderá ser recuperado.`, `Excluir ${y}?`, '🗑️').then(async ok => { if(!ok) return;
+async function deleteArchiveYear(y) {
+  const ok = await dp6Confirm(`O cronograma de ${y} será excluído permanentemente e não poderá ser recuperado.`, `Excluir ${y}?`, '🗑️');
+  if(!ok) return;
   delete store.archive[y];
   await saveStoreWithFeedback();
   renderArchive();
-  });
 }
 
 async function saveStoreWithFeedback() {
