@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DP6 — Cronograma de Certificações 2025</title>
+  <title id="page-title">DP6 — Cronograma de Certificações</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
@@ -148,7 +148,7 @@
     .q-months { font-size: 0.78rem; color: var(--muted); font-weight: 400; }
 
     .quarter-right { display: flex; align-items: center; gap: 1rem; }
-    .q-count { font-size: 0.78rem; color: var(--muted); }
+    .q-count { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
 
     .chevron {
       width: 28px; height: 28px; border: 1px solid var(--border-mid); border-radius: 50%;
@@ -194,7 +194,7 @@
     .cert-section-dot.obrigatorias { background: var(--cyan); }
     .cert-section-dot.opcionais    { background: var(--muted); opacity: 0.5; }
     .cert-section-count {
-      margin-left: auto; font-size: 0.72rem; color: var(--muted);
+      margin-left: auto; font-size: 0.72rem; color: var(--muted); white-space: nowrap; flex-shrink: 0;
     }
     .cert-section-empty {
       color: var(--muted); font-size: 0.82rem; padding: 0.8rem 0;
@@ -439,6 +439,134 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
+    /* ── ADMIN TABS ── */
+    .admin-tabs {
+      display: flex; border-bottom: 1px solid var(--border-mid);
+      padding: 0 0.6rem; gap: 0; position: sticky; top: 64px;
+      background: var(--bg-mid); z-index: 1;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .admin-tabs::-webkit-scrollbar { display: none; }
+    .admin-tab {
+      padding: 0.8rem 0.85rem; font-size: 0.75rem; font-weight: 600;
+      color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;
+      transition: all 0.2s; white-space: nowrap; flex-shrink: 0;
+    }
+    .admin-tab:hover { color: var(--white); }
+    .admin-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+    .admin-tab-panel { display: none; }
+    .admin-tab-panel.active { display: block; }
+
+    /* ── YEAR EDITOR ── */
+    .year-editor-box {
+      background: var(--bg-deep); border: 1px solid var(--border-mid);
+      border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem;
+    }
+    .year-editor-box h4 { font-size: 0.78rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.8rem; }
+    .year-row { display: flex; align-items: center; gap: 0.6rem; }
+    .year-input { width: 90px; text-align: center; font-size: 1rem; font-weight: 700; }
+    .btn-year-save { padding: 9px 18px; font-size: 0.8rem; width: auto; }
+
+    /* ── ARCHIVE ── */
+    .archive-year-item {
+      background: var(--bg-deep); border: 1px solid var(--border-mid);
+      border-radius: 8px; padding: 0.9rem 1.1rem; margin-bottom: 0.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .archive-year-label { font-size: 0.9rem; font-weight: 600; }
+    .archive-year-meta  { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .archive-actions { display: flex; gap: 0.4rem; }
+    .archive-empty { color: var(--muted); font-size: 0.83rem; padding: 1rem 0; }
+
+    /* ── CERT BANK ── */
+    .bank-search {
+      background: var(--bg-deep); border: 1px solid var(--border-mid);
+      color: var(--white); padding: 9px 13px; border-radius: 7px;
+      font-family: var(--font); font-size: 0.85rem; outline: none;
+      width: 100%; margin-bottom: 1rem; transition: border-color 0.2s;
+    }
+    .bank-search:focus { border-color: rgba(0,194,212,0.5); }
+    .bank-search::placeholder { color: #3a5568; }
+
+    .bank-cert-item {
+      background: var(--bg-deep); border: 1px solid var(--border-mid);
+      border-radius: 7px; padding: 0.75rem 0.9rem; margin-bottom: 0.4rem;
+      display: flex; align-items: center; gap: 0.7rem;
+      cursor: grab; transition: border-color 0.2s, box-shadow 0.2s;
+      user-select: none;
+    }
+    .bank-cert-item:hover { border-color: rgba(0,194,212,0.3); }
+    .bank-cert-item.dragging {
+      opacity: 0.5; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    .bank-cert-item.inactive { opacity: 0.45; }
+    .drag-handle {
+      color: var(--muted); cursor: grab; flex-shrink: 0; padding: 2px 4px;
+      font-size: 0.9rem;
+    }
+    .bank-cert-name { flex: 1; font-size: 0.85rem; font-weight: 500; min-width: 0; }
+    .bank-cert-status {
+      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.5px;
+      padding: 2px 7px; border-radius: 3px; text-transform: uppercase; white-space: nowrap;
+    }
+    .bank-cert-status.active-q {
+      background: rgba(104,211,145,0.1); border: 1px solid rgba(104,211,145,0.3); color: #68d391;
+    }
+    .bank-cert-status.inactive-s {
+      background: rgba(106,138,159,0.08); border: 1px solid rgba(106,138,159,0.2); color: var(--muted);
+    }
+    .bank-cert-actions { display: flex; gap: 0.3rem; flex-shrink: 0; }
+
+    /* Assign modal */
+    .assign-modal-overlay {
+      position: fixed; inset: 0; background: rgba(5,13,22,0.88);
+      backdrop-filter: blur(8px); z-index: 3000;
+      display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .assign-modal-overlay.active { opacity: 1; pointer-events: all; }
+    .assign-modal {
+      background: var(--bg-card); border: 1px solid rgba(0,194,212,0.2);
+      border-radius: 14px; padding: 2rem; width: 100%; max-width: 400px;
+      transform: translateY(16px) scale(0.97); transition: transform 0.25s ease;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+    .assign-modal-overlay.active .assign-modal { transform: translateY(0) scale(1); }
+    .assign-modal h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .assign-modal p { font-size: 0.8rem; color: var(--muted); margin-bottom: 1.2rem; }
+    .assign-options { display: flex; flex-direction: column; gap: 0.45rem; margin-bottom: 1.2rem; }
+    .assign-option {
+      padding: 0.75rem 1rem; border-radius: 7px; border: 1px solid var(--border-mid);
+      cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 0.6rem;
+      font-size: 0.85rem; font-weight: 500;
+    }
+    .assign-option:hover { border-color: rgba(0,194,212,0.4); background: var(--cyan-dim); color: var(--cyan); }
+    .assign-option.deactivate { color: var(--muted); }
+    .assign-option.deactivate:hover { border-color: rgba(255,100,100,0.3); background: rgba(255,100,100,0.05); color: #ff8080; }
+
+
+    /* ── DP6 CONFIRM / ALERT MODAL ── */
+    .dp6-modal-overlay {
+      position: fixed; inset: 0; background: rgba(5,13,22,0.88);
+      backdrop-filter: blur(10px); z-index: 9000;
+      display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .dp6-modal-overlay.active { opacity: 1; pointer-events: all; }
+    .dp6-modal-box {
+      background: var(--bg-card); border: 1px solid rgba(0,194,212,0.2);
+      border-radius: 14px; padding: 2rem; width: 100%; max-width: 400px;
+      transform: translateY(14px) scale(0.97); transition: transform 0.25s ease;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5); text-align: center;
+    }
+    .dp6-modal-overlay.active .dp6-modal-box { transform: translateY(0) scale(1); }
+    .dp6-modal-icon { font-size: 2rem; margin-bottom: 0.8rem; }
+    .dp6-modal-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .dp6-modal-msg { font-size: 0.84rem; color: var(--muted); line-height: 1.65; margin-bottom: 1.5rem; }
+    .dp6-modal-actions { display: flex; gap: 0.5rem; justify-content: center; }
+    .dp6-modal-actions button { flex: 1; max-width: 160px; }
+
     @media (max-width: 600px) {
       header { padding: 0 1.2rem; }
       main   { padding: 1.2rem 1.2rem 4rem; }
@@ -456,7 +584,7 @@
     <span class="logo-sub">Certificações</span>
   </a>
   <div class="header-right">
-    <span class="year-badge">2025</span>
+    <span class="year-badge" id="year-badge-display">2026</span>
     <button class="admin-btn" onclick="openAdmin()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>
@@ -469,7 +597,7 @@
 <section class="hero">
   <div class="hero-glow"></div>
   <div class="hero-eyebrow">Cronograma Interno · 2025</div>
-  <h1>Certificações<br/><span>DP6 2025</span></h1>
+  <h1>Certificações<br/><span id="hero-year-display">DP6 2026</span></h1>
   <p>Acompanhe todas as certificações do ano, organizadas por trimestre. Clique em um card para acessar o link de inscrição.</p>
 </section>
 
@@ -513,47 +641,160 @@
         </svg>
       </button>
     </div>
+
+    <!-- LOGIN -->
     <div class="admin-login-wrap" id="admin-login">
       <div class="login-icon">🔐</div>
       <h3>Área Restrita</h3>
-      <p>Insira a senha e o token GitHub para gerenciar as certificações.</p>
+      <p>Insira a senha de administrador para gerenciar as certificações.</p>
       <div class="input-wrap">
         <label>Senha</label>
         <input type="password" class="dp6-input" id="admin-password" placeholder="••••••••"
           onkeydown="if(event.key==='Enter')checkAdminPass()" />
       </div>
-      <div class="input-wrap" id="token-field-wrap">
-        <label>Token GitHub <span style="color:var(--muted);font-weight:400">(salvo no seu navegador)</span></label>
-        <input type="password" class="dp6-input" id="admin-token" placeholder="ghp_..."
-          onkeydown="if(event.key==='Enter')checkAdminPass()" />
-        <span style="font-size:.7rem;color:var(--muted);margin-top:2px">Gerado em GitHub → Settings → Developer settings → Tokens (classic)</span>
-      </div>
       <button class="btn-primary" onclick="checkAdminPass()">Entrar</button>
       <p class="login-error" id="login-error">Senha incorreta. Tente novamente.</p>
     </div>
-    <div id="admin-token-info" style="display:none;align-items:center;justify-content:space-between;padding:.7rem 1.8rem;background:rgba(0,194,212,0.05);border-bottom:1px solid var(--border-mid);font-size:.75rem;color:var(--muted)">
-      <span>🔑 Token salvo neste navegador</span>
-      <button class="btn-ghost" style="font-size:.7rem;padding:4px 10px" onclick="changeToken()">Trocar token</button>
+
+    <!-- MANAGEMENT -->
+    <div id="admin-management" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+
+      <!-- TABS -->
+      <div class="admin-tabs">
+        <div class="admin-tab active" onclick="switchAdminTab('trimestres',this)">📅 Trimestres</div>
+        <div class="admin-tab" onclick="switchAdminTab('banco',this)">📦 Gerenciar Certificações</div>
+        <div class="admin-tab" onclick="switchAdminTab('config',this)">⚙️ Configurações</div>
+        <div class="admin-tab" onclick="switchAdminTab('arquivo',this)">🗂 Arquivo</div>
+      </div>
+
+      <!-- TAB: TRIMESTRES -->
+      <div class="admin-tab-panel active admin-content" id="tab-trimestres">
+        <div id="admin-quarters-list"></div>
+      </div>
+
+      <!-- TAB: BANCO DE CERTS -->
+      <div class="admin-tab-panel admin-content" id="tab-banco">
+        <input class="bank-search" id="bank-search" placeholder="🔍  Buscar certificação..." oninput="renderBank()"/>
+        <div id="bank-add-form" style="background:rgba(0,194,212,0.04);border:1px dashed rgba(0,194,212,0.2);border-radius:7px;padding:1rem;margin-bottom:1rem;display:none;flex-direction:column;gap:.55rem">
+          <label style="font-size:.75rem;color:var(--muted)">Nome da Certificação</label>
+          <input type="text" class="dp6-input" id="bank-new-name" placeholder="Ex: Google Analytics 4" style="font-size:.82rem;padding:8px 11px"/>
+          <label style="font-size:.75rem;color:var(--muted)">URL de Acesso</label>
+          <input type="url" class="dp6-input" id="bank-new-url" placeholder="https://..." style="font-size:.82rem;padding:8px 11px"/>
+          <div id="bank-new-tags-wrap"></div>
+          <div id="bank-new-tipo-wrap"></div>
+          <div style="display:flex;gap:.4rem;margin-top:.2rem">
+            <button class="btn-primary" style="padding:9px" onclick="bankAddCert()">Adicionar</button>
+            <button class="btn-ghost" onclick="toggleBankAddForm(false)">Cancelar</button>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
+          <span style="font-size:.72rem;color:var(--muted)" id="bank-count-label"></span>
+          <button class="btn-ghost" style="font-size:.75rem;padding:5px 12px" onclick="toggleBankAddForm(true)">+ Nova certificação</button>
+        </div>
+        <div id="bank-list"></div>
+      </div>
+
+      <!-- TAB: CONFIGURAÇÕES -->
+      <div class="admin-tab-panel admin-content" id="tab-config">
+        <div class="year-editor-box">
+          <h4>Ano ativo</h4>
+          <p style="font-size:.8rem;color:var(--muted);margin-bottom:.9rem">Ao salvar um novo ano, o cronograma atual é arquivado automaticamente e os trimestres são resetados.</p>
+          <div class="year-row">
+            <input type="number" class="dp6-input year-input" id="year-input" min="2020" max="2099" style="width:100px;text-align:center"/>
+            <button class="btn-primary" style="padding:9px 18px;font-size:.82rem;white-space:nowrap" onclick="saveYear()">Salvar ano</button>
+          </div>
+        </div>
+        <div class="year-editor-box" style="margin-top:1rem">
+          <h4>Senha do admin</h4>
+          <p style="font-size:.8rem;color:var(--muted);margin-bottom:.9rem">Altere a senha de acesso ao painel.</p>
+          <div style="display:flex;flex-direction:column;gap:.5rem">
+            <input type="password" class="dp6-input" id="new-pass-1" placeholder="Nova senha" style="font-size:.85rem"/>
+            <input type="password" class="dp6-input" id="new-pass-2" placeholder="Confirmar senha" style="font-size:.85rem"/>
+            <button class="btn-primary btn-year-save" onclick="saveNewPass()">Salvar senha</button>
+            <p id="pass-msg" style="font-size:.75rem;display:none"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: ARQUIVO -->
+      <div class="admin-tab-panel admin-content" id="tab-arquivo">
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">Cronogramas de anos anteriores. Somente leitura.</p>
+        <div id="archive-list"></div>
+      </div>
+
     </div>
-    <div class="admin-content" id="admin-management" style="display:none">
-      <div id="admin-quarters-list"></div>
+
+    <!-- ASSIGN MODAL -->
+    <div class="assign-modal-overlay" id="assign-modal">
+      <div class="assign-modal">
+        <button class="modal-close" style="position:absolute;top:1rem;right:1rem" onclick="closeAssignModal()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <h3 id="assign-cert-name">Certificação</h3>
+        <p>Escolha onde alocar esta certificação:</p>
+        <div class="assign-options" id="assign-options"></div>
+        <button class="btn-ghost" style="width:100%" onclick="closeAssignModal()">Cancelar</button>
+      </div>
     </div>
   </div>
 </div>
 
+
+<!-- DP6 MODAL (replaces alert/confirm) -->
+<div class="dp6-modal-overlay" id="dp6-modal">
+  <div class="dp6-modal-box">
+    <div class="dp6-modal-icon" id="dp6-modal-icon">ℹ️</div>
+    <div class="dp6-modal-title" id="dp6-modal-title"></div>
+    <div class="dp6-modal-msg" id="dp6-modal-msg"></div>
+    <div class="dp6-modal-actions" id="dp6-modal-actions"></div>
+  </div>
+</div>
+
 <script>
-// ── GITHUB CONFIG ────────────────────────────────────────────────────────────
-const GH_USER  = 'rafa-britto-dp6';
-const GH_REPO  = 'dp6-certificacoes';
-const GH_FILE  = 'certs.json';
-const GH_API   = `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`;
+// ── CONFIG ───────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'dp6_store_v2';
 
-// Token nunca fica no código — admin digita uma vez e fica no localStorage do navegador
-function getToken() { return localStorage.getItem('dp6_gh_token') || ''; }
-function setToken(t) { localStorage.setItem('dp6_gh_token', t.trim()); }
-function clearToken() { localStorage.removeItem('dp6_gh_token'); }
+// ── DP6 MODAL (replaces native alert/confirm) ─────────────────────────────────
+function dp6Alert(msg, title, icon) {
+  return new Promise(resolve => {
+    document.getElementById('dp6-modal-icon').textContent  = icon  || 'ℹ️';
+    document.getElementById('dp6-modal-title').textContent = title || 'Aviso';
+    document.getElementById('dp6-modal-msg').textContent   = msg;
+    const actions = document.getElementById('dp6-modal-actions');
+    actions.innerHTML = '';
+    const btn = document.createElement('button');
+    btn.className = 'btn-primary'; btn.textContent = 'OK';
+    btn.onclick = () => { closeDp6Modal(); resolve(); };
+    actions.appendChild(btn);
+    document.getElementById('dp6-modal').classList.add('active');
+  });
+}
 
-const ADMIN_PASS = 'dp6admin2025';
+function dp6Confirm(msg, title, icon) {
+  return new Promise(resolve => {
+    document.getElementById('dp6-modal-icon').textContent  = icon  || '❓';
+    document.getElementById('dp6-modal-title').textContent = title || 'Confirmar';
+    document.getElementById('dp6-modal-msg').textContent   = msg;
+    const actions = document.getElementById('dp6-modal-actions');
+    actions.innerHTML = '';
+    const btnNo  = document.createElement('button');
+    btnNo.className  = 'btn-ghost';   btnNo.textContent  = 'Cancelar';
+    btnNo.onclick = () => { closeDp6Modal(); resolve(false); };
+    const btnYes = document.createElement('button');
+    btnYes.className = 'btn-primary'; btnYes.textContent = 'Confirmar';
+    btnYes.onclick = () => { closeDp6Modal(); resolve(true); };
+    actions.appendChild(btnNo);
+    actions.appendChild(btnYes);
+    document.getElementById('dp6-modal').classList.add('active');
+  });
+}
+
+function closeDp6Modal() {
+  document.getElementById('dp6-modal').classList.remove('active');
+}
+
+
+
 
 const QUARTER_META = [
   { id:'q1', label:'Q1', title:'1º Trimestre', months:'Janeiro · Março'   },
@@ -585,133 +826,84 @@ function tagHtml(tags) {
   }).join('');
 }
 
-function defaultData() {
-  return {
-    q1: [
-      { id:uid(), name:'Google Analytics 4',     url:'https://skillshop.credential.net/path/google-analytics', tags:[{id:'consulting'},{id:'ds'}], tipo:'obrigatorias' },
-      { id:uid(), name:'Google Ads Fundamentos', url:'https://skillshop.credential.net/path/google-ads',        tags:[{id:'consulting'}],          tipo:'obrigatorias' },
-      { id:uid(), name:'Looker Studio',          url:'https://skillshop.credential.net/path/looker-studio',     tags:[{id:'todos'}],                tipo:'opcionais' },
-    ],
-    q2: [
-      { id:uid(), name:'BigQuery ML',          url:'https://cloud.google.com/training/bigquery',              tags:[{id:'de'},{id:'ds'}], tipo:'obrigatorias' },
-      { id:uid(), name:'Tag Manager Avançado', url:'https://skillshop.credential.net/path/tag-manager',       tags:[{id:'consulting'}],  tipo:'opcionais' },
-    ],
-    q3: [
-      { id:uid(), name:'dbt Core',                       url:'https://courses.getdbt.com/courses/fundamentals',         tags:[{id:'de'}],             tipo:'obrigatorias' },
-      { id:uid(), name:'GCP Professional Data Engineer', url:'https://cloud.google.com/certification/data-engineer',    tags:[{id:'de'},{id:'infra'}], tipo:'opcionais' },
-    ],
-    q4: [
-      { id:uid(), name:'Salesforce Marketing Cloud', url:'https://trailhead.salesforce.com/credentials/marketingcloudadmin', tags:[{id:'consulting'}],              tipo:'obrigatorias' },
-      { id:uid(), name:'AWS Cloud Practitioner',     url:'https://aws.amazon.com/certification/certified-cloud-practitioner/', tags:[{id:'infra'},{id:'de'}], tipo:'opcionais' },
-    ],
-  };
-}
 
 function uid() { return Math.random().toString(36).slice(2,10); }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-let data = {};
+// ── STORE ─────────────────────────────────────────────────────────────────────
+// store shape: { activeYear, adminPass, years: { "2026": {q1,q2,q3,q4} }, bank: [...], archive: { "2025": {q1,...} } }
+let store = {};
 let adminAuthed = false;
-let ghFileSha = null; // SHA do arquivo no GitHub, necessário para updates
+let assigningCertId = null; // for assign modal
 
-// ── LOADING STATE ─────────────────────────────────────────────────────────────
-function showLoading(msg) {
-  document.getElementById('quarters-container').innerHTML =
-    `<div style="text-align:center;padding:4rem 2rem;color:var(--muted);font-size:.9rem">
-       <div style="font-size:1.5rem;margin-bottom:.8rem">⏳</div>${msg||'Carregando...'}
-     </div>`;
-}
-function showError(msg) {
-  document.getElementById('quarters-container').innerHTML =
-    `<div style="text-align:center;padding:4rem 2rem;color:#ff6060;font-size:.88rem">
-       <div style="font-size:1.5rem;margin-bottom:.8rem">⚠️</div>${msg}
-     </div>`;
-}
-
-// ── GITHUB API ────────────────────────────────────────────────────────────────
-const GH_RAW = `https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/${GH_FILE}`;
-
-async function loadFromGitHub() {
-  showLoading('Carregando certificações...');
+function loadStore() {
   try {
-    // Leitura via URL pública raw — sem token, sem bloqueio CORS
-    const res = await fetch(GH_RAW + '?t=' + Date.now());
-    if (res.status === 404) {
-      data = defaultData();
-      await saveToGitHub(data, true);
-    } else if (!res.ok) {
-      throw new Error('HTTP ' + res.status);
-    } else {
-      data = await res.json();
-      fetchSha(); // busca SHA em background para poder salvar depois
-    }
-    renderMain();
-  } catch(e) {
-    showError('Erro ao carregar dados do GitHub.<br>Verifique sua conexão e recarregue a página.');
-    console.error(e);
-  }
+    const r = localStorage.getItem(STORAGE_KEY);
+    return r ? JSON.parse(r) : defaultStore();
+  } catch { return defaultStore(); }
+}
+function saveStore() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
 }
 
-async function fetchSha() {
-  try {
-    const res = await fetch(GH_API, {
-      headers: { 'Authorization': 'token ' + getToken(), 'Accept': 'application/vnd.github.v3+json' }
-    });
-    if (res.ok) { const json = await res.json(); ghFileSha = json.sha; }
-  } catch(e) { console.warn('SHA fetch failed:', e); }
-}
-
-async function saveToGitHub(newData, isNew) {
-  const body = {
-    message: 'chore: atualiza certificações',
-    content: btoa(unescape(encodeURIComponent(JSON.stringify(newData, null, 2)))),
-  };
-  if (ghFileSha && !isNew) body.sha = ghFileSha;
-
-  const res = await fetch(GH_API, {
-    method: 'PUT',
-    headers: {
-      'Authorization': 'token ' + getToken(),
-      'Accept': 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json'
+function defaultStore() {
+  const year = '2026';
+  return {
+    activeYear: year,
+    adminPass:  'dp6admin2025',
+    years: {
+      [year]: {
+        q1: [
+          { id:uid(), name:'Google Analytics 4',     url:'https://skillshop.credential.net/path/google-analytics', tags:[{id:'consulting'},{id:'ds'}], tipo:'obrigatorias' },
+          { id:uid(), name:'Google Ads Fundamentos', url:'https://skillshop.credential.net/path/google-ads',        tags:[{id:'consulting'}],          tipo:'obrigatorias' },
+          { id:uid(), name:'Looker Studio',          url:'https://skillshop.credential.net/path/looker-studio',     tags:[{id:'todos'}],               tipo:'opcionais'    },
+        ],
+        q2: [
+          { id:uid(), name:'BigQuery ML',          url:'https://cloud.google.com/training/bigquery',        tags:[{id:'de'},{id:'ds'}], tipo:'obrigatorias' },
+          { id:uid(), name:'Tag Manager Avançado', url:'https://skillshop.credential.net/path/tag-manager', tags:[{id:'consulting'}],  tipo:'opcionais'    },
+        ],
+        q3: [
+          { id:uid(), name:'dbt Core',                       url:'https://courses.getdbt.com/courses/fundamentals',      tags:[{id:'de'}],              tipo:'obrigatorias' },
+          { id:uid(), name:'GCP Professional Data Engineer', url:'https://cloud.google.com/certification/data-engineer', tags:[{id:'de'},{id:'infra'}], tipo:'opcionais'    },
+        ],
+        q4: [
+          { id:uid(), name:'Salesforce Marketing Cloud', url:'https://trailhead.salesforce.com/credentials/marketingcloudadmin',      tags:[{id:'consulting'}],      tipo:'obrigatorias' },
+          { id:uid(), name:'AWS Cloud Practitioner',     url:'https://aws.amazon.com/certification/certified-cloud-practitioner/', tags:[{id:'infra'},{id:'de'}], tipo:'opcionais'    },
+        ],
+      }
     },
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.message || 'Erro ao salvar');
-  }
-  const json = await res.json();
-  ghFileSha = json.content.sha;
-  return json;
-}
-
-async function saveData(newData) {
-  setSaveStatus('saving');
-  try {
-    await saveToGitHub(newData);
-    setSaveStatus('ok');
-  } catch(e) {
-    setSaveStatus('error');
-    console.error(e);
-    throw e;
-  }
-}
-
-// ── SAVE STATUS INDICATOR ─────────────────────────────────────────────────────
-function setSaveStatus(state) {
-  const el = document.getElementById('save-status');
-  if (!el) return;
-  const states = {
-    saving: { text:'Salvando...', color:'var(--muted)' },
-    ok:     { text:'✓ Salvo',     color:'#68d391'       },
-    error:  { text:'⚠ Erro ao salvar', color:'#ff6060'  },
+    bank: [
+      { id:uid(), name:'Google Analytics 4',            url:'https://skillshop.credential.net/path/google-analytics',   tags:[{id:'consulting'},{id:'ds'}], tipo:'obrigatorias' },
+      { id:uid(), name:'Google Ads Fundamentos',         url:'https://skillshop.credential.net/path/google-ads',          tags:[{id:'consulting'}],          tipo:'obrigatorias' },
+      { id:uid(), name:'Looker Studio',                  url:'https://skillshop.credential.net/path/looker-studio',       tags:[{id:'todos'}],               tipo:'opcionais'    },
+      { id:uid(), name:'BigQuery ML',                    url:'https://cloud.google.com/training/bigquery',                tags:[{id:'de'},{id:'ds'}],        tipo:'obrigatorias' },
+      { id:uid(), name:'Tag Manager Avançado',           url:'https://skillshop.credential.net/path/tag-manager',         tags:[{id:'consulting'}],          tipo:'opcionais'    },
+      { id:uid(), name:'dbt Core',                       url:'https://courses.getdbt.com/courses/fundamentals',           tags:[{id:'de'}],                  tipo:'obrigatorias' },
+      { id:uid(), name:'GCP Professional Data Engineer', url:'https://cloud.google.com/certification/data-engineer',      tags:[{id:'de'},{id:'infra'}],     tipo:'opcionais'    },
+      { id:uid(), name:'Salesforce Marketing Cloud',     url:'https://trailhead.salesforce.com/credentials/marketingcloudadmin', tags:[{id:'consulting'}],   tipo:'obrigatorias' },
+      { id:uid(), name:'AWS Cloud Practitioner',         url:'https://aws.amazon.com/certification/certified-cloud-practitioner/', tags:[{id:'infra'},{id:'de'}], tipo:'opcionais' },
+    ],
+    archive: {},
   };
-  const s = states[state] || {};
-  el.textContent = s.text;
-  el.style.color  = s.color;
-  el.style.opacity = '1';
-  if (state === 'ok') setTimeout(() => { el.style.opacity='0'; }, 3000);
+}
+
+// Helpers to get current year data
+function currentYear() { return store.activeYear || '2026'; }
+function currentData() { return store.years[currentYear()] || {q1:[],q2:[],q3:[],q4:[]}; }
+
+function initData() {
+  store = loadStore();
+  updateYearUI();
+  renderMain();
+}
+
+function updateYearUI() {
+  const y = currentYear();
+  document.getElementById('year-badge-display').textContent = y;
+  document.getElementById('hero-year-display').textContent = 'DP6 ' + y;
+  document.title = 'DP6 — Cronograma de Certificações ' + y;
+  const inp = document.getElementById('year-input');
+  if (inp) inp.value = y;
 }
 
 function certCardHtml(c, i, qid) {
@@ -736,7 +928,7 @@ function renderCertSections(certs, qid) {
         <div class="cert-section-header">
           <div class="cert-section-dot ${tipo}"></div>
           <span class="cert-section-label ${tipo}">${label}</span>
-          <span class="cert-section-count">${list.length} cert${list.length!==1?'s':'.'}.</span>
+          <span class="cert-section-count">${list.length} ${list.length===1?'certificação':'certificações'}</span>
         </div>
         ${list.length ? `<div class="cards-grid">${cards}</div>` : `<div class="cert-section-empty">Nenhuma certificação nesta seção.</div>`}
       </div>`;
@@ -748,7 +940,7 @@ function renderMain() {
   const wrap = document.getElementById('quarters-container');
   wrap.innerHTML = '';
   QUARTER_META.forEach(q => {
-    const certs = data[q.id]||[];
+    const certs = currentData()[q.id]||[];
     const el = document.createElement('div');
     el.className='quarter'; el.id='acc-'+q.id;
     el.innerHTML=`
@@ -758,7 +950,7 @@ function renderMain() {
           <div><div class="q-title">${q.title}</div><div class="q-months">${q.months}</div></div>
         </div>
         <div class="quarter-right">
-          <span class="q-count">${certs.length} cert${certs.length!==1?'s':'.'}.</span>
+          <span class="q-count">${certs.length===1?'1 certificação':certs.length+' certificações'}</span>
           <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
         </div>
       </div>
@@ -772,7 +964,7 @@ function renderMain() {
 function toggleQ(qid) { document.getElementById('acc-'+qid).classList.toggle('open'); }
 
 function openCertModal(certId,qid) {
-  const certs=data[qid]||[], cert=certs.find(c=>c.id===certId); if(!cert)return;
+  const certs=currentData()[qid]||[], cert=certs.find(c=>c.id===certId); if(!cert)return;
   const q=QUARTER_META.find(q=>q.id===qid), idx=certs.indexOf(cert);
   document.getElementById('modal-icon').textContent=ICONS[idx%ICONS.length];
   document.getElementById('modal-quarter').textContent=q.label+' · '+q.title;
@@ -789,53 +981,27 @@ function closeCertModalDirect(){document.getElementById('cert-modal').classList.
 function openAdmin(){
   document.getElementById('admin-overlay').classList.add('active');
   if(!adminAuthed){
-    // Pré-preenche campo de token se já tiver salvo
-    setTimeout(()=>{
-      const tf = document.getElementById('admin-token');
-      if(getToken()) { tf.placeholder='Token já salvo — deixe em branco para manter'; }
-      document.getElementById('admin-password').focus();
-    },300);
     document.getElementById('admin-login').style.display='flex';
     document.getElementById('admin-management').style.display='none';
+    setTimeout(()=>document.getElementById('admin-password').focus(),300);
   }
-}
-
-function changeToken(){
-  adminAuthed=false;
-  clearToken();
-  document.getElementById('admin-token-info').style.display='none';
-  document.getElementById('admin-management').style.display='none';
-  document.getElementById('admin-login').style.display='flex';
-  document.getElementById('admin-password').value='';
-  document.getElementById('admin-token').value='';
-  document.getElementById('admin-token').placeholder='ghp_...';
-  document.getElementById('login-error').style.display='none';
-  setTimeout(()=>document.getElementById('admin-password').focus(),100);
 }
 function closeAdmin(){document.getElementById('admin-overlay').classList.remove('active');}
 function closeAdminBg(e){if(e.target===document.getElementById('admin-overlay'))closeAdmin();}
 
 function checkAdminPass(){
-  const pass  = document.getElementById('admin-password').value;
-  const token = document.getElementById('admin-token').value.trim();
-  if(pass !== ADMIN_PASS){
+  if(document.getElementById('admin-password').value === (store.adminPass||'dp6admin2025')){
+    adminAuthed=true;
+    document.getElementById('admin-login').style.display='none';
+    document.getElementById('admin-management').style.display='flex';
+    renderAdminPanel();
+    renderBank();
+    renderArchive();
+    updateYearUI();
+  } else {
     document.getElementById('login-error').style.display='block';
     document.getElementById('admin-password').value='';
-    return;
   }
-  // Se digitou um novo token, salva; se não digitou, usa o que já estava salvo
-  if(token) setToken(token);
-  if(!getToken()){
-    document.getElementById('login-error').textContent='Informe o token GitHub.';
-    document.getElementById('login-error').style.display='block';
-    return;
-  }
-  adminAuthed=true;
-  document.getElementById('admin-login').style.display='none';
-  document.getElementById('admin-management').style.display='block';
-  // Mostra botão de logout/trocar token no painel
-  document.getElementById('admin-token-info').style.display='flex';
-  renderAdminPanel();
 }
 
 function tipoSelectorHtml(selectedTipo) {
@@ -903,104 +1069,292 @@ function collectTags(prefix) {
 
 function renderAdminPanel(){
   const list=document.getElementById('admin-quarters-list'); list.innerHTML='';
+  // Helper tip at top
+  const tip = document.createElement('p');
+  tip.style.cssText='font-size:.75rem;color:var(--muted);padding:.8rem 1.8rem .4rem;line-height:1.5';
+  tip.textContent='Use "Mover" para realocar uma certificação entre trimestres, ou acesse "Gerenciar Certificações" para adicionar, editar ou excluir.';
+  list.appendChild(tip);
+
   QUARTER_META.forEach(q=>{
-    const certs=data[q.id]||[], sec=document.createElement('div');
+    const certs=currentData()[q.id]||[], sec=document.createElement('div');
     sec.className='admin-quarter-section'; sec.id='admsec-'+q.id;
     sec.innerHTML=`
       <div class="admin-section-header">
         <span class="admin-section-title">${q.label} · ${q.title}</span>
-        <button class="btn-ghost" style="font-size:.75rem;padding:5px 12px" onclick="showAddForm('${q.id}')">+ Adicionar</button>
+        <span style="font-size:.72rem;color:var(--muted)">${certs.length===1?'1 certificação':certs.length+' certificações'}</span>
       </div>
       <div id="admcerts-${q.id}">
-        ${certs.length===0?`<p style="color:var(--muted);font-size:.8rem;margin-bottom:.5rem">Nenhuma certificação.</p>`
+        ${certs.length===0
+          ?`<p style="color:var(--muted);font-size:.8rem;margin-bottom:.5rem;padding:0 1.8rem">Nenhuma certificação alocada.</p>`
           :certs.map(c=>`
             <div class="admin-cert-item" id="admitem-${c.id}">
               <div class="admin-cert-info">
                 <div class="admin-cert-name">${esc(c.name)}</div>
-                <div class="admin-cert-url">${esc(c.url)}</div>
                 <span class="admin-cert-tipo ${c.tipo||'obrigatorias'}">${(c.tipo||'obrigatorias')==='obrigatorias'?'⭐ Obrigatória':'Opcional'}</span>
                 ${c.tags&&c.tags.length?`<div class="cert-tags" style="margin-top:5px">${tagHtml(c.tags)}</div>`:''}
               </div>
               <div class="admin-cert-actions">
-                <button class="btn-edit" onclick="startEdit('${c.id}','${q.id}')">Editar</button>
-                <button class="btn-danger" onclick="deleteCert('${c.id}','${q.id}')">✕</button>
+                <button class="btn-edit" onclick="openAssignModal('${c.id}')">Mover</button>
               </div>
             </div>`).join('')}
-      </div>
-      <div class="add-cert-form" id="addform-${q.id}">
-        <label>Nome da Certificação</label>
-        <input type="text" class="dp6-input" id="addname-${q.id}" placeholder="Ex: Google Analytics 4" style="font-size:.82rem;padding:8px 11px"/>
-        <label>URL de Acesso</label>
-        <input type="url" class="dp6-input" id="addurl-${q.id}" placeholder="https://..." style="font-size:.82rem;padding:8px 11px"/>
-        ${tagSelectorHtml('add-'+q.id, [])}
-        ${tipoSelectorHtml('obrigatorias')}
-        <div style="display:flex;gap:.45rem;margin-top:.2rem">
-          <button class="btn-primary" style="padding:9px" onclick="addCert('${q.id}')">Salvar</button>
-          <button class="btn-ghost" onclick="hideAddForm('${q.id}')">Cancelar</button>
-        </div>
       </div>`;
     list.appendChild(sec);
   });
 }
 
-function startEdit(certId,qid){
-  const cert=(data[qid]||[]).find(c=>c.id===certId); if(!cert)return;
-  const el=document.getElementById('admitem-'+certId);
+// CRUD moved to bank tab (Gerenciar Certificações)
+
+// ── ADMIN TABS ───────────────────────────────────────────────────────────────
+function switchAdminTab(tab, el) {
+  document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.admin-tab-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(tab==='banco') renderBank();
+  if(tab==='arquivo') renderArchive();
+  if(tab==='config') { updateYearUI(); }
+}
+
+// ── YEAR ─────────────────────────────────────────────────────────────────────
+function saveYear() {
+  const newYear = String(document.getElementById('year-input').value).trim();
+  if(!/^[0-9]{4}$/.test(newYear)) { dp6Alert('Informe um ano válido com 4 dígitos (ex: 2027).','Ano inválido','⚠️'); return; }
+  const current = currentYear();
+  if(newYear === current) { dp6Alert('O ano ' + newYear + ' já é o ano ativo.','Sem alteração','ℹ️'); return; }
+  dp6Confirm(`O cronograma de ${current} será arquivado e os trimestres de ${newYear} começarão vazios.`, `Ativar ${newYear}?`, '📅').then(ok => {
+    if(!ok) return;
+    store.archive = store.archive || {};
+    const snapshot = JSON.parse(JSON.stringify(currentData()));
+    snapshot._archivedAt = new Date().toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    store.archive[current] = snapshot;
+    store.years[newYear] = { q1:[], q2:[], q3:[], q4:[] };
+    store.activeYear = newYear;
+    saveStore();
+    updateYearUI();
+    renderMain();
+    renderAdminPanel();
+    renderArchive();
+    renderBank();
+    dp6Alert(`O cronograma de ${current} foi arquivado. Aloque as certificações nos trimestres de ${newYear}.`, `Ano ${newYear} ativado!`, '🎉');
+  });
+}
+
+// ── PASS ──────────────────────────────────────────────────────────────────────
+function saveNewPass() {
+  const p1 = document.getElementById('new-pass-1').value.trim();
+  const p2 = document.getElementById('new-pass-2').value.trim();
+  const msg = document.getElementById('pass-msg');
+  if(!p1) { msg.textContent='Informe a nova senha.'; msg.style.color='#ff6060'; msg.style.display='block'; return; }
+  if(p1!==p2) { msg.textContent='As senhas não coincidem.'; msg.style.color='#ff6060'; msg.style.display='block'; return; }
+  store.adminPass = p1;
+  saveStore();
+  document.getElementById('new-pass-1').value='';
+  document.getElementById('new-pass-2').value='';
+  msg.textContent='✓ Senha atualizada com sucesso.';
+  msg.style.color='#68d391';
+  msg.style.display='block';
+  setTimeout(()=>{ msg.style.display='none'; }, 3000);
+}
+
+// ── BANK ──────────────────────────────────────────────────────────────────────
+function toggleBankAddForm(show) {
+  document.getElementById('bank-add-form').style.display = show ? 'flex' : 'none';
+  if(show) {
+    document.getElementById('bank-new-tags-wrap').innerHTML = tagSelectorHtml('bank-new', []);
+    document.getElementById('bank-new-tipo-wrap').innerHTML = tipoSelectorHtml('obrigatorias');
+    document.getElementById('bank-new-name').focus();
+  }
+}
+
+function bankAddCert() {
+  const name = document.getElementById('bank-new-name').value.trim();
+  const url  = document.getElementById('bank-new-url').value.trim();
+  if(!name||!url) { dp6Alert('Preencha o nome e a URL da certificação.','Campo obrigatório','⚠️'); return; }
+  const tags = collectTags('bank-new');
+  const tipo = collectTipo();
+  store.bank.push({ id:uid(), name, url, tags, tipo });
+  saveStore();
+  toggleBankAddForm(false);
+  document.getElementById('bank-new-name').value='';
+  document.getElementById('bank-new-url').value='';
+  renderBank();
+}
+
+function bankStartEdit(id) {
+  const cert = store.bank.find(c=>c.id===id);
+  if(!cert) return;
+  const el = document.getElementById('bitem-'+id);
+  if(!el) return;
   el.classList.add('editing');
-  el.innerHTML=`<div class="edit-form">
-    <input type="text" class="dp6-input" id="ename-${certId}" value="${esc(cert.name)}" style="font-size:.82rem;padding:8px 11px"/>
-    <input type="url"  class="dp6-input" id="eurl-${certId}"  value="${esc(cert.url)}"  style="font-size:.82rem;padding:8px 11px"/>
-    ${tagSelectorHtml('edit-'+certId, cert.tags||[])}
-    ${tipoSelectorHtml(cert.tipo||'obrigatorias')}
-    <div style="display:flex;gap:.4rem">
-      <button class="btn-primary" style="flex:1;padding:8px" onclick="saveEdit('${certId}','${qid}')">Salvar</button>
-      <button class="btn-ghost" onclick="renderAdminPanel()">Cancelar</button>
-    </div>
-  </div>`;
+  el.style.cssText = 'display:block;padding:1rem;border-color:rgba(0,194,212,0.3)';
+  el.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:.5rem">
+      <input type="text" class="dp6-input" id="bedit-name-${id}" value="${esc(cert.name)}" style="font-size:.82rem;padding:8px 11px"/>
+      <input type="url"  class="dp6-input" id="bedit-url-${id}"  value="${esc(cert.url)}"  style="font-size:.82rem;padding:8px 11px"/>
+      <div id="bedit-tags-${id}"></div>
+      <div id="bedit-tipo-${id}"></div>
+      <div style="display:flex;gap:.4rem;margin-top:.2rem">
+        <button class="btn-primary" style="flex:1;padding:8px" onclick="bankSaveEdit('${id}')">Salvar</button>
+        <button class="btn-ghost" onclick="renderBank()">Cancelar</button>
+      </div>
+    </div>`;
+  document.getElementById('bedit-tags-'+id).innerHTML = tagSelectorHtml('bedit-'+id, cert.tags||[]);
+  document.getElementById('bedit-tipo-'+id).innerHTML = tipoSelectorHtml(cert.tipo||'obrigatorias');
 }
 
-async function saveEdit(certId,qid){
-  const name=document.getElementById('ename-'+certId).value.trim();
-  const url=document.getElementById('eurl-'+certId).value.trim();
-  if(!name||!url)return alert('Preencha todos os campos.');
-  const idx=(data[qid]||[]).findIndex(c=>c.id===certId); if(idx===-1)return;
-  const tags=collectTags('edit-'+certId);
-  const tipo=collectTipo();
-  data[qid][idx]={id:certId,name,url,tags,tipo};
-  try {
-    await saveData(data);
-    renderAdminPanel(); renderMain();
-  } catch(e) { alert('Erro ao salvar. Tente novamente.'); }
+function bankSaveEdit(id) {
+  const name = document.getElementById('bedit-name-'+id).value.trim();
+  const url  = document.getElementById('bedit-url-'+id).value.trim();
+  if(!name||!url) { dp6Alert('Preencha o nome e a URL.','Campo obrigatório','⚠️'); return; }
+  const tags = collectTags('bedit-'+id);
+  const tipo = collectTipo();
+  const bi = store.bank.findIndex(c=>c.id===id);
+  if(bi===-1) return;
+  store.bank[bi] = { ...store.bank[bi], name, url, tags, tipo };
+  // sync to active quarters
+  const yr = currentData();
+  ['q1','q2','q3','q4'].forEach(q=>{
+    const qi = (yr[q]||[]).findIndex(c=>c.id===id);
+    if(qi!==-1) yr[q][qi] = { ...yr[q][qi], name, url, tags, tipo };
+  });
+  saveStore(); renderBank(); renderAdminPanel(); renderMain();
 }
 
-async function deleteCert(certId,qid){
-  if(!confirm('Remover esta certificação?'))return;
-  data[qid]=(data[qid]||[]).filter(c=>c.id!==certId);
-  try {
-    await saveData(data);
-    renderAdminPanel(); renderMain();
-  } catch(e) { alert('Erro ao salvar. Tente novamente.'); }
+function bankDeleteCert(id) {
+  dp6Confirm('Esta certificação será removida do banco e de todos os trimestres.','Remover certificação','🗑️').then(ok=>{ if(!ok) return;
+  store.bank = store.bank.filter(c=>c.id!==id);
+  const yr = currentData();
+  ['q1','q2','q3','q4'].forEach(q=>{ yr[q]=(yr[q]||[]).filter(c=>c.id!==id); });
+  saveStore(); renderBank(); renderAdminPanel(); renderMain();
+  });
 }
 
-function showAddForm(qid){document.getElementById('addform-'+qid).classList.add('visible');document.getElementById('addname-'+qid).focus();}
-function hideAddForm(qid){document.getElementById('addform-'+qid).classList.remove('visible');document.getElementById('addname-'+qid).value='';document.getElementById('addurl-'+qid).value='';}
-
-async function addCert(qid){
-  const name=document.getElementById('addname-'+qid).value.trim();
-  const url=document.getElementById('addurl-'+qid).value.trim();
-  if(!name||!url)return alert('Preencha todos os campos.');
-  const tags=collectTags('add-'+qid);
-  const tipo=collectTipo();
-  data[qid]=data[qid]||[];
-  data[qid].push({id:uid(),name,url,tags,tipo});
-  try {
-    await saveData(data);
-    hideAddForm(qid); renderAdminPanel(); renderMain();
-  } catch(e) { alert('Erro ao salvar. Tente novamente.'); }
+function renderBank() {
+  const q = (document.getElementById('bank-search')||{}).value||'';
+  const filtered = store.bank.filter(c=>c.name.toLowerCase().includes(q.toLowerCase()));
+  const yr = currentData();
+  const activeIds = new Set(['q1','q2','q3','q4'].flatMap(qk=>(yr[qk]||[]).map(c=>c.id)));
+  const lbl = document.getElementById('bank-count-label');
+  if(lbl) lbl.textContent = filtered.length + (filtered.length===1?' certificação cadastrada':' certificações cadastradas');
+  const list = document.getElementById('bank-list');
+  if(!list) return;
+  if(!filtered.length) { list.innerHTML='<div class="archive-empty">Nenhuma certificação encontrada.</div>'; return; }
+  list.innerHTML = filtered.map(c=>{
+    const isActive = activeIds.has(c.id);
+    const qLabel = isActive ? Object.keys(yr).filter(k=>k.startsWith('q')).find(k=>(yr[k]||[]).some(x=>x.id===c.id)) : null;
+    const statusLabel = isActive ? (qLabel ? qLabel.toUpperCase() : 'Ativo') : 'Inativo';
+    const statusCls   = isActive ? 'active-q' : 'inactive-s';
+    return `<div class="bank-cert-item${isActive?'':' inactive'}" id="bitem-${c.id}">
+      <span class="drag-handle">⠿</span>
+      <div class="bank-cert-name">${esc(c.name)}</div>
+      <span class="bank-cert-status ${statusCls}">${statusLabel}</span>
+      <div class="bank-cert-actions">
+        <button class="btn-edit" onclick="bankStartEdit('${c.id}')">Editar</button>
+        <button class="btn-edit" onclick="openAssignModal('${c.id}')" style="background:rgba(0,194,212,0.08);border-color:rgba(0,194,212,0.2);color:var(--cyan)">Alocar</button>
+        <button class="btn-danger" onclick="bankDeleteCert('${c.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCertModalDirect();closeAdmin();}});
-loadFromGitHub();
+// ── ASSIGN MODAL ──────────────────────────────────────────────────────────────
+function openAssignModal(certId) {
+  assigningCertId = certId;
+  const cert = store.bank.find(c=>c.id===certId);
+  if(!cert) return;
+  document.getElementById('assign-cert-name').textContent = cert.name;
+  const yr = currentData();
+  const currentQ = ['q1','q2','q3','q4'].find(q=>(yr[q]||[]).some(c=>c.id===certId));
+  const opts = QUARTER_META.map(q=>`
+    <div class="assign-option${currentQ===q.id?' selected-option':''}" onclick="assignCert('${certId}','${q.id}')">
+      <span class="q-tag" style="font-size:.6rem">${q.label}</span>
+      ${q.title} <span style="color:var(--muted);font-size:.78rem">${q.months}</span>
+      ${currentQ===q.id?'<span style="margin-left:auto;color:var(--cyan);font-size:.72rem">✓ atual</span>':''}
+    </div>`).join('');
+  const deactivateOpt = currentQ
+    ? `<div class="assign-option deactivate" onclick="assignCert('${certId}',null)">🚫 Remover dos trimestres (desativar)</div>`
+    : '';
+  document.getElementById('assign-options').innerHTML = opts + deactivateOpt;
+  document.getElementById('assign-modal').classList.add('active');
+}
+
+function closeAssignModal() {
+  document.getElementById('assign-modal').classList.remove('active');
+  assigningCertId = null;
+}
+
+function assignCert(certId, targetQid) {
+  const cert = store.bank.find(c=>c.id===certId);
+  if(!cert) return closeAssignModal();
+  const yr = currentData();
+  // Remove from all quarters first
+  ['q1','q2','q3','q4'].forEach(q=>{ yr[q]=(yr[q]||[]).filter(c=>c.id!==certId); });
+  // Add to target if not deactivating
+  if(targetQid) {
+    yr[targetQid] = yr[targetQid]||[];
+    yr[targetQid].push({...cert});
+  }
+  saveStore();
+  closeAssignModal();
+  renderBank();
+  renderAdminPanel();
+  renderMain();
+}
+
+// ── ARCHIVE ───────────────────────────────────────────────────────────────────
+function renderArchive() {
+  const list = document.getElementById('archive-list');
+  if(!list) return;
+  const years = Object.keys(store.archive||{}).sort((a,b)=>b-a);
+  if(!years.length) { list.innerHTML='<div class="archive-empty">Nenhum ano arquivado ainda.</div>'; return; }
+  list.innerHTML = years.map(y=>{
+    const yd = store.archive[y];
+    const total = ['q1','q2','q3','q4'].reduce((n,q)=>n+(yd[q]||[]).length,0);
+    return `<div class="archive-year-item">
+      <div>
+        <div class="archive-year-label">📅 ${y}</div>
+        <div class="archive-year-meta">${total} ${total===1?'certificação':'certificações'} no cronograma</div>
+        ${yd._archivedAt?`<div class="archive-year-meta" style="color:rgba(106,138,159,0.6);font-size:.7rem;margin-top:2px">📌 Arquivado em ${yd._archivedAt}</div>`:''}
+      </div>
+      <div class="archive-actions">
+        <button class="btn-edit" onclick="viewArchiveYear('${y}')">Visualizar</button>
+        <button class="btn-danger" onclick="deleteArchiveYear('${y}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function viewArchiveYear(y) {
+  const yd = store.archive[y];
+  let lines = [];
+  QUARTER_META.forEach(q=>{
+    const certs = yd[q.id]||[];
+    lines.push(`<strong style="color:var(--cyan)">${q.label} · ${q.title}</strong>`);
+    if(!certs.length) lines.push('<span style="color:var(--muted)">  (vazio)</span>');
+    else certs.forEach(cert=>{ lines.push(`  • ${esc(cert.name)}`); });
+  });
+  document.getElementById('dp6-modal-icon').textContent = '📅';
+  document.getElementById('dp6-modal-title').textContent = `Arquivo ${y}`;
+  document.getElementById('dp6-modal-msg').innerHTML = `<div style="text-align:left;font-size:.8rem;line-height:1.9">${lines.join('<br>')}</div>`;
+  const actions = document.getElementById('dp6-modal-actions');
+  actions.innerHTML = '';
+  const btn = document.createElement('button');
+  btn.className='btn-primary'; btn.textContent='Fechar';
+  btn.onclick = closeDp6Modal;
+  actions.appendChild(btn);
+  document.getElementById('dp6-modal').classList.add('active');
+}
+
+function deleteArchiveYear(y) {
+  dp6Confirm(`O cronograma de ${y} será excluído permanentemente e não poderá ser recuperado.`, `Excluir ${y}?`, '🗑️').then(ok => { if(!ok) return;
+  delete store.archive[y];
+  saveStore();
+  renderArchive();
+  });
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCertModalDirect();closeAdmin();closeAssignModal();closeDp6Modal();}});
+initData();
 </script>
 </body>
 </html>
