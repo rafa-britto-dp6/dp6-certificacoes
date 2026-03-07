@@ -601,6 +601,7 @@
   <p>Acompanhe todas as certificações do ano, organizadas por trimestre. Clique em um card para acessar o link de inscrição.</p>
 </section>
 
+<div id="main-status" style="display:none;text-align:center;padding:.6rem 1rem;font-size:.8rem;position:sticky;top:64px;z-index:50;background:rgba(10,21,32,0.95);border-bottom:1px solid var(--border-mid)"></div>
 <main id="quarters-container"></main>
 
 <footer>Portal interno &nbsp;·&nbsp; <img src="https://dp6.github.io/assets/img/logo-dp6.png" alt="DP6" style="height:14px;vertical-align:middle;opacity:0.6;margin:0 2px"/> &nbsp;·&nbsp; 2025</footer>
@@ -752,7 +753,8 @@
 
 <script>
 // ── CONFIG ───────────────────────────────────────────────────────────────────
-const STORAGE_KEY = 'dp6_store_v2';
+const GAS_URL = 'https://script.google.com/a/macros/dp6.com.br/s/AKfycbxVDsD4kq660ScRaLJJJxbmMmod8hfy37GeWhc39D-9dOB9E9HkOEE9KB_JzCSZcwNRYw/exec';
+const STORAGE_KEY = 'dp6_store_v2'; // fallback cache
 
 // ── DP6 MODAL (replaces native alert/confirm) ─────────────────────────────────
 function dp6Alert(msg, title, icon) {
@@ -836,65 +838,78 @@ let store = {};
 let adminAuthed = false;
 let assigningCertId = null; // for assign modal
 
-function loadStore() {
-  try {
-    const r = localStorage.getItem(STORAGE_KEY);
-    return r ? JSON.parse(r) : defaultStore();
-  } catch { return defaultStore(); }
+// ── LOCAL CACHE (fallback while loading) ─────────────────────────────────────
+function getCached() {
+  try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
 }
-function saveStore() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+function setCache(s) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
 }
 
-function defaultStore() {
-  const year = '2026';
-  return {
-    activeYear: year,
-    adminPass:  'dp6admin2025',
-    years: {
-      [year]: {
-        q1: [
-          { id:uid(), name:'Google Analytics 4',     url:'https://skillshop.credential.net/path/google-analytics', tags:[{id:'consulting'},{id:'ds'}], tipo:'obrigatorias' },
-          { id:uid(), name:'Google Ads Fundamentos', url:'https://skillshop.credential.net/path/google-ads',        tags:[{id:'consulting'}],          tipo:'obrigatorias' },
-          { id:uid(), name:'Looker Studio',          url:'https://skillshop.credential.net/path/looker-studio',     tags:[{id:'todos'}],               tipo:'opcionais'    },
-        ],
-        q2: [
-          { id:uid(), name:'BigQuery ML',          url:'https://cloud.google.com/training/bigquery',        tags:[{id:'de'},{id:'ds'}], tipo:'obrigatorias' },
-          { id:uid(), name:'Tag Manager Avançado', url:'https://skillshop.credential.net/path/tag-manager', tags:[{id:'consulting'}],  tipo:'opcionais'    },
-        ],
-        q3: [
-          { id:uid(), name:'dbt Core',                       url:'https://courses.getdbt.com/courses/fundamentals',      tags:[{id:'de'}],              tipo:'obrigatorias' },
-          { id:uid(), name:'GCP Professional Data Engineer', url:'https://cloud.google.com/certification/data-engineer', tags:[{id:'de'},{id:'infra'}], tipo:'opcionais'    },
-        ],
-        q4: [
-          { id:uid(), name:'Salesforce Marketing Cloud', url:'https://trailhead.salesforce.com/credentials/marketingcloudadmin',      tags:[{id:'consulting'}],      tipo:'obrigatorias' },
-          { id:uid(), name:'AWS Cloud Practitioner',     url:'https://aws.amazon.com/certification/certified-cloud-practitioner/', tags:[{id:'infra'},{id:'de'}], tipo:'opcionais'    },
-        ],
-      }
-    },
-    bank: [
-      { id:uid(), name:'Google Analytics 4',            url:'https://skillshop.credential.net/path/google-analytics',   tags:[{id:'consulting'},{id:'ds'}], tipo:'obrigatorias' },
-      { id:uid(), name:'Google Ads Fundamentos',         url:'https://skillshop.credential.net/path/google-ads',          tags:[{id:'consulting'}],          tipo:'obrigatorias' },
-      { id:uid(), name:'Looker Studio',                  url:'https://skillshop.credential.net/path/looker-studio',       tags:[{id:'todos'}],               tipo:'opcionais'    },
-      { id:uid(), name:'BigQuery ML',                    url:'https://cloud.google.com/training/bigquery',                tags:[{id:'de'},{id:'ds'}],        tipo:'obrigatorias' },
-      { id:uid(), name:'Tag Manager Avançado',           url:'https://skillshop.credential.net/path/tag-manager',         tags:[{id:'consulting'}],          tipo:'opcionais'    },
-      { id:uid(), name:'dbt Core',                       url:'https://courses.getdbt.com/courses/fundamentals',           tags:[{id:'de'}],                  tipo:'obrigatorias' },
-      { id:uid(), name:'GCP Professional Data Engineer', url:'https://cloud.google.com/certification/data-engineer',      tags:[{id:'de'},{id:'infra'}],     tipo:'opcionais'    },
-      { id:uid(), name:'Salesforce Marketing Cloud',     url:'https://trailhead.salesforce.com/credentials/marketingcloudadmin', tags:[{id:'consulting'}],   tipo:'obrigatorias' },
-      { id:uid(), name:'AWS Cloud Practitioner',         url:'https://aws.amazon.com/certification/certified-cloud-practitioner/', tags:[{id:'infra'},{id:'de'}], tipo:'opcionais' },
-    ],
-    archive: {},
-  };
+function emptyStore() {
+  return { activeYear:'2026', adminPass:'dp6admin2025', years:{'2026':{q1:[],q2:[],q3:[],q4:[]}}, bank:[], archive:{} };
 }
 
 // Helpers to get current year data
 function currentYear() { return store.activeYear || '2026'; }
 function currentData() { return store.years[currentYear()] || {q1:[],q2:[],q3:[],q4:[]}; }
 
+// ── SHEETS API ────────────────────────────────────────────────────────────────
+async function loadFromSheets() {
+  showMainLoading();
+  // Show cached data immediately while fetching
+  const cached = getCached();
+  if (cached) { store = cached; updateYearUI(); renderMain(); }
+
+  try {
+    const res = await fetch(GAS_URL + '?action=load&t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'Sheets error');
+    store = json.store;
+    setCache(store);
+    updateYearUI();
+    renderMain();
+    hideMainLoading();
+  } catch(e) {
+    console.error('Sheets load error:', e);
+    if (!cached) {
+      // Nothing cached — show empty state with error
+      store = emptyStore();
+      renderMain();
+    }
+    showMainError('Não foi possível carregar dados do servidor. Exibindo dados em cache.');
+  }
+}
+
+async function saveStore() {
+  setCache(store); // save locally immediately
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: 'save', store })
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || 'Save error');
+}
+
+function showMainLoading() {
+  const el = document.getElementById('main-status');
+  if (el) { el.textContent = '⏳ Carregando...'; el.style.display = 'block'; el.style.color = 'var(--muted)'; }
+}
+function hideMainLoading() {
+  const el = document.getElementById('main-status');
+  if (el) el.style.display = 'none';
+}
+function showMainError(msg) {
+  const el = document.getElementById('main-status');
+  if (el) { el.textContent = '⚠️ ' + msg; el.style.display = 'block'; el.style.color = '#f6ad55'; }
+  setTimeout(() => { if(el) el.style.display='none'; }, 6000);
+}
+
 function initData() {
-  store = loadStore();
-  updateYearUI();
-  renderMain();
+  loadFromSheets();
 }
 
 function updateYearUI() {
@@ -1121,7 +1136,7 @@ function saveYear() {
   if(!/^[0-9]{4}$/.test(newYear)) { dp6Alert('Informe um ano válido com 4 dígitos (ex: 2027).','Ano inválido','⚠️'); return; }
   const current = currentYear();
   if(newYear === current) { dp6Alert('O ano ' + newYear + ' já é o ano ativo.','Sem alteração','ℹ️'); return; }
-  dp6Confirm(`O cronograma de ${current} será arquivado e os trimestres de ${newYear} começarão vazios.`, `Ativar ${newYear}?`, '📅').then(ok => {
+  dp6Confirm(`O cronograma de ${current} será arquivado e os trimestres de ${newYear} começarão vazios.`, `Ativar ${newYear}?`, '📅').then(async ok => {
     if(!ok) return;
     store.archive = store.archive || {};
     const snapshot = JSON.parse(JSON.stringify(currentData()));
@@ -1129,7 +1144,7 @@ function saveYear() {
     store.archive[current] = snapshot;
     store.years[newYear] = { q1:[], q2:[], q3:[], q4:[] };
     store.activeYear = newYear;
-    saveStore();
+    await saveStoreWithFeedback();
     updateYearUI();
     renderMain();
     renderAdminPanel();
@@ -1140,14 +1155,14 @@ function saveYear() {
 }
 
 // ── PASS ──────────────────────────────────────────────────────────────────────
-function saveNewPass() {
+async function saveNewPass() {
   const p1 = document.getElementById('new-pass-1').value.trim();
   const p2 = document.getElementById('new-pass-2').value.trim();
   const msg = document.getElementById('pass-msg');
   if(!p1) { msg.textContent='Informe a nova senha.'; msg.style.color='#ff6060'; msg.style.display='block'; return; }
   if(p1!==p2) { msg.textContent='As senhas não coincidem.'; msg.style.color='#ff6060'; msg.style.display='block'; return; }
   store.adminPass = p1;
-  saveStore();
+  await saveStoreWithFeedback();
   document.getElementById('new-pass-1').value='';
   document.getElementById('new-pass-2').value='';
   msg.textContent='✓ Senha atualizada com sucesso.';
@@ -1166,14 +1181,14 @@ function toggleBankAddForm(show) {
   }
 }
 
-function bankAddCert() {
+async function bankAddCert() {
   const name = document.getElementById('bank-new-name').value.trim();
   const url  = document.getElementById('bank-new-url').value.trim();
   if(!name||!url) { dp6Alert('Preencha o nome e a URL da certificação.','Campo obrigatório','⚠️'); return; }
   const tags = collectTags('bank-new');
   const tipo = collectTipo();
   store.bank.push({ id:uid(), name, url, tags, tipo });
-  saveStore();
+  await saveStoreWithFeedback();
   toggleBankAddForm(false);
   document.getElementById('bank-new-name').value='';
   document.getElementById('bank-new-url').value='';
@@ -1202,7 +1217,7 @@ function bankStartEdit(id) {
   document.getElementById('bedit-tipo-'+id).innerHTML = tipoSelectorHtml(cert.tipo||'obrigatorias');
 }
 
-function bankSaveEdit(id) {
+async function bankSaveEdit(id) {
   const name = document.getElementById('bedit-name-'+id).value.trim();
   const url  = document.getElementById('bedit-url-'+id).value.trim();
   if(!name||!url) { dp6Alert('Preencha o nome e a URL.','Campo obrigatório','⚠️'); return; }
@@ -1217,15 +1232,15 @@ function bankSaveEdit(id) {
     const qi = (yr[q]||[]).findIndex(c=>c.id===id);
     if(qi!==-1) yr[q][qi] = { ...yr[q][qi], name, url, tags, tipo };
   });
-  saveStore(); renderBank(); renderAdminPanel(); renderMain();
+  await saveStoreWithFeedback(); renderBank(); renderAdminPanel(); renderMain();
 }
 
-function bankDeleteCert(id) {
+async function bankDeleteCert(id) {
   dp6Confirm('Esta certificação será removida do banco e de todos os trimestres.','Remover certificação','🗑️').then(ok=>{ if(!ok) return;
   store.bank = store.bank.filter(c=>c.id!==id);
   const yr = currentData();
   ['q1','q2','q3','q4'].forEach(q=>{ yr[q]=(yr[q]||[]).filter(c=>c.id!==id); });
-  saveStore(); renderBank(); renderAdminPanel(); renderMain();
+  await saveStoreWithFeedback(); renderBank(); renderAdminPanel(); renderMain();
   });
 }
 
@@ -1283,7 +1298,7 @@ function closeAssignModal() {
   assigningCertId = null;
 }
 
-function assignCert(certId, targetQid) {
+async function assignCert(certId, targetQid) {
   const cert = store.bank.find(c=>c.id===certId);
   if(!cert) return closeAssignModal();
   const yr = currentData();
@@ -1294,7 +1309,7 @@ function assignCert(certId, targetQid) {
     yr[targetQid] = yr[targetQid]||[];
     yr[targetQid].push({...cert});
   }
-  saveStore();
+  await saveStoreWithFeedback();
   closeAssignModal();
   renderBank();
   renderAdminPanel();
@@ -1346,11 +1361,37 @@ function viewArchiveYear(y) {
 }
 
 function deleteArchiveYear(y) {
-  dp6Confirm(`O cronograma de ${y} será excluído permanentemente e não poderá ser recuperado.`, `Excluir ${y}?`, '🗑️').then(ok => { if(!ok) return;
+  dp6Confirm(`O cronograma de ${y} será excluído permanentemente e não poderá ser recuperado.`, `Excluir ${y}?`, '🗑️').then(async ok => { if(!ok) return;
   delete store.archive[y];
-  saveStore();
+  await saveStoreWithFeedback();
   renderArchive();
   });
+}
+
+async function saveStoreWithFeedback() {
+  setSaveStatus('saving');
+  try {
+    await saveStore();
+    setSaveStatus('ok');
+  } catch(e) {
+    setSaveStatus('error');
+    console.error('Save error:', e);
+    dp6Alert('Não foi possível salvar no servidor. Suas alterações estão salvas localmente.', 'Erro ao salvar', '⚠️');
+  }
+}
+
+// Save status indicator
+function setSaveStatus(state) {
+  const el = document.getElementById('save-status');
+  if (!el) return;
+  const map = {
+    saving: { text:'Salvando...', color:'var(--muted)' },
+    ok:     { text:'✓ Salvo',     color:'#68d391'      },
+    error:  { text:'⚠ Erro',      color:'#ff6060'      },
+  };
+  const s = map[state] || {};
+  el.textContent = s.text; el.style.color = s.color; el.style.opacity = '1';
+  if (state === 'ok') setTimeout(()=>{ el.style.opacity='0'; }, 3000);
 }
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCertModalDirect();closeAdmin();closeAssignModal();closeDp6Modal();}});
