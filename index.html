@@ -615,28 +615,36 @@ function showError(msg) {
 }
 
 // ── GITHUB API ────────────────────────────────────────────────────────────────
+const GH_RAW = `https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/${GH_FILE}`;
+
 async function loadFromGitHub() {
   showLoading('Carregando certificações...');
   try {
-    const res = await fetch(GH_API + '?t=' + Date.now(), {
-      headers: { 'Authorization': 'token ' + GH_TOKEN, 'Accept': 'application/vnd.github.v3+json' }
-    });
+    // Leitura via URL pública raw — sem token, sem bloqueio CORS
+    const res = await fetch(GH_RAW + '?t=' + Date.now());
     if (res.status === 404) {
-      // Arquivo ainda não existe — usa dados padrão e cria
       data = defaultData();
       await saveToGitHub(data, true);
     } else if (!res.ok) {
       throw new Error('HTTP ' + res.status);
     } else {
-      const json = await res.json();
-      ghFileSha = json.sha;
-      data = JSON.parse(atob(json.content.replace(/\n/g, '')));
+      data = await res.json();
+      fetchSha(); // busca SHA em background para poder salvar depois
     }
     renderMain();
   } catch(e) {
     showError('Erro ao carregar dados do GitHub.<br>Verifique sua conexão e recarregue a página.');
     console.error(e);
   }
+}
+
+async function fetchSha() {
+  try {
+    const res = await fetch(GH_API, {
+      headers: { 'Authorization': 'token ' + GH_TOKEN, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (res.ok) { const json = await res.json(); ghFileSha = json.sha; }
+  } catch(e) { console.warn('SHA fetch failed:', e); }
 }
 
 async function saveToGitHub(newData, isNew) {
