@@ -516,14 +516,24 @@
     <div class="admin-login-wrap" id="admin-login">
       <div class="login-icon">🔐</div>
       <h3>Área Restrita</h3>
-      <p>Insira a senha de administrador para gerenciar as certificações.</p>
+      <p>Insira a senha e o token GitHub para gerenciar as certificações.</p>
       <div class="input-wrap">
         <label>Senha</label>
         <input type="password" class="dp6-input" id="admin-password" placeholder="••••••••"
           onkeydown="if(event.key==='Enter')checkAdminPass()" />
       </div>
+      <div class="input-wrap" id="token-field-wrap">
+        <label>Token GitHub <span style="color:var(--muted);font-weight:400">(salvo no seu navegador)</span></label>
+        <input type="password" class="dp6-input" id="admin-token" placeholder="ghp_..."
+          onkeydown="if(event.key==='Enter')checkAdminPass()" />
+        <span style="font-size:.7rem;color:var(--muted);margin-top:2px">Gerado em GitHub → Settings → Developer settings → Tokens (classic)</span>
+      </div>
       <button class="btn-primary" onclick="checkAdminPass()">Entrar</button>
       <p class="login-error" id="login-error">Senha incorreta. Tente novamente.</p>
+    </div>
+    <div id="admin-token-info" style="display:none;align-items:center;justify-content:space-between;padding:.7rem 1.8rem;background:rgba(0,194,212,0.05);border-bottom:1px solid var(--border-mid);font-size:.75rem;color:var(--muted)">
+      <span>🔑 Token salvo neste navegador</span>
+      <button class="btn-ghost" style="font-size:.7rem;padding:4px 10px" onclick="changeToken()">Trocar token</button>
     </div>
     <div class="admin-content" id="admin-management" style="display:none">
       <div id="admin-quarters-list"></div>
@@ -536,8 +546,12 @@
 const GH_USER  = 'rafa-britto-dp6';
 const GH_REPO  = 'dp6-certificacoes';
 const GH_FILE  = 'certs.json';
-const GH_TOKEN = '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';
 const GH_API   = `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`;
+
+// Token nunca fica no código — admin digita uma vez e fica no localStorage do navegador
+function getToken() { return localStorage.getItem('dp6_gh_token') || ''; }
+function setToken(t) { localStorage.setItem('dp6_gh_token', t.trim()); }
+function clearToken() { localStorage.removeItem('dp6_gh_token'); }
 
 const ADMIN_PASS = 'dp6admin2025';
 
@@ -641,7 +655,7 @@ async function loadFromGitHub() {
 async function fetchSha() {
   try {
     const res = await fetch(GH_API, {
-      headers: { 'Authorization': 'token ' + GH_TOKEN, 'Accept': 'application/vnd.github.v3+json' }
+      headers: { 'Authorization': 'token ' + getToken(), 'Accept': 'application/vnd.github.v3+json' }
     });
     if (res.ok) { const json = await res.json(); ghFileSha = json.sha; }
   } catch(e) { console.warn('SHA fetch failed:', e); }
@@ -657,7 +671,7 @@ async function saveToGitHub(newData, isNew) {
   const res = await fetch(GH_API, {
     method: 'PUT',
     headers: {
-      'Authorization': 'token ' + GH_TOKEN,
+      'Authorization': 'token ' + getToken(),
       'Accept': 'application/vnd.github.v3+json',
       'Content-Type': 'application/json'
     },
@@ -774,21 +788,54 @@ function closeCertModalDirect(){document.getElementById('cert-modal').classList.
 
 function openAdmin(){
   document.getElementById('admin-overlay').classList.add('active');
-  if(!adminAuthed){document.getElementById('admin-login').style.display='flex';document.getElementById('admin-management').style.display='none';setTimeout(()=>document.getElementById('admin-password').focus(),300);}
+  if(!adminAuthed){
+    // Pré-preenche campo de token se já tiver salvo
+    setTimeout(()=>{
+      const tf = document.getElementById('admin-token');
+      if(getToken()) { tf.placeholder='Token já salvo — deixe em branco para manter'; }
+      document.getElementById('admin-password').focus();
+    },300);
+    document.getElementById('admin-login').style.display='flex';
+    document.getElementById('admin-management').style.display='none';
+  }
+}
+
+function changeToken(){
+  adminAuthed=false;
+  clearToken();
+  document.getElementById('admin-token-info').style.display='none';
+  document.getElementById('admin-management').style.display='none';
+  document.getElementById('admin-login').style.display='flex';
+  document.getElementById('admin-password').value='';
+  document.getElementById('admin-token').value='';
+  document.getElementById('admin-token').placeholder='ghp_...';
+  document.getElementById('login-error').style.display='none';
+  setTimeout(()=>document.getElementById('admin-password').focus(),100);
 }
 function closeAdmin(){document.getElementById('admin-overlay').classList.remove('active');}
 function closeAdminBg(e){if(e.target===document.getElementById('admin-overlay'))closeAdmin();}
 
 function checkAdminPass(){
-  if(document.getElementById('admin-password').value===ADMIN_PASS){
-    adminAuthed=true;
-    document.getElementById('admin-login').style.display='none';
-    document.getElementById('admin-management').style.display='block';
-    renderAdminPanel();
-  } else {
+  const pass  = document.getElementById('admin-password').value;
+  const token = document.getElementById('admin-token').value.trim();
+  if(pass !== ADMIN_PASS){
     document.getElementById('login-error').style.display='block';
     document.getElementById('admin-password').value='';
+    return;
   }
+  // Se digitou um novo token, salva; se não digitou, usa o que já estava salvo
+  if(token) setToken(token);
+  if(!getToken()){
+    document.getElementById('login-error').textContent='Informe o token GitHub.';
+    document.getElementById('login-error').style.display='block';
+    return;
+  }
+  adminAuthed=true;
+  document.getElementById('admin-login').style.display='none';
+  document.getElementById('admin-management').style.display='block';
+  // Mostra botão de logout/trocar token no painel
+  document.getElementById('admin-token-info').style.display='flex';
+  renderAdminPanel();
 }
 
 function tipoSelectorHtml(selectedTipo) {
