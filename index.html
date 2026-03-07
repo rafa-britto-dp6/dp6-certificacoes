@@ -6,7 +6,7 @@
   <title id="page-title">DP6 — Cronograma de Certificações</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
   <style>
     :root {
       --bg-deep:    #0a1520;
@@ -656,15 +656,11 @@
 
 <script>
 // ══════════════════════════════════════════════════════════════════════════════
-// ⚙️  CONFIGURAÇÃO — substitua pelos seus valores do Supabase
-//     Supabase → Settings → API Keys → Project URL + anon (legacy) key
+// ⚙️  CONFIGURAÇÃO
 // ══════════════════════════════════════════════════════════════════════════════
-const SUPABASE_URL     = 'https://hplbcjaadmtzubruzufy.supabase.co';
+const EDGE_URL = 'https://hplbcjaadmtzubruzufy.supabase.co/functions/v1/dp6-store';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwbGJjamFhZG10enVicnV6dWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4OTYyNjEsImV4cCI6MjA4ODQ3MjI2MX0.46f4P6INIvh6q5RTo20ZdF7CBA_A2y9mTgNxK93cylE';
 // ══════════════════════════════════════════════════════════════════════════════
-
-// SDK oficial — resolve CORS automaticamente
-const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const STORAGE_KEY = 'dp6_store_v3';
 const QUARTER_META = [
@@ -742,7 +738,13 @@ function setConnBadge(state) {
   isConnected = state === 'online';
 }
 
-// ── SUPABASE API (via SDK — sem CORS) ────────────────────────────────────────
+// ── SUPABASE API (via Edge Function — sem CORS) ───────────────────────────────
+const SB_HEADERS = {
+  'apikey': SUPABASE_ANON_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+  'Content-Type': 'application/json',
+};
+
 async function loadFromSupabase(showFeedback = false) {
   setConnBadge('loading');
   showMainLoading();
@@ -755,15 +757,12 @@ async function loadFromSupabase(showFeedback = false) {
   }
 
   try {
-    const { data, error } = await _sb
-      .from('dp6_store')
-      .select('data')
-      .eq('id', 1)
-      .single();
+    const res = await fetch(EDGE_URL + '?id=eq.1&select=data', { headers: SB_HEADERS });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const rows = await res.json();
+    if (!rows.length) throw new Error('No data');
 
-    if (error) throw new Error(error.message);
-
-    store = data.data;
+    store = rows[0].data;
     setCache(store);
     updateYearUI();
     renderMain();
@@ -781,7 +780,7 @@ async function loadFromSupabase(showFeedback = false) {
     if (!cached) { store = emptyStore(); updateYearUI(); renderMain(); }
     hideMainLoading();
     if (showFeedback) {
-      dp6Alert('Não foi possível conectar ao Supabase. Verifique a URL e a chave nas configurações do arquivo HTML.', 'Erro de conexão', '⚠️');
+      dp6Alert('Não foi possível conectar. Verifique a Edge Function no Supabase.', 'Erro de conexão', '⚠️');
     } else {
       showMainError('Usando dados em cache. Verifique a conexão com o Supabase.');
     }
@@ -789,12 +788,12 @@ async function loadFromSupabase(showFeedback = false) {
 }
 
 async function saveToSupabase() {
-  const { error } = await _sb
-    .from('dp6_store')
-    .update({ data: store })
-    .eq('id', 1);
-
-  if (error) throw new Error(error.message);
+  const res = await fetch(EDGE_URL + '?id=eq.1', {
+    method: 'PATCH',
+    headers: { ...SB_HEADERS, 'Prefer': 'return=representation' },
+    body: JSON.stringify({ data: store })
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
 
   setCache(store);
   lastSyncTime = new Date();
