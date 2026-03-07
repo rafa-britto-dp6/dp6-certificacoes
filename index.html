@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DP6 — Cronograma de Certificações 2025</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-deep:    #0a1520;
+      --bg-mid:     #0d1e2e;
+      --bg-card:    #112236;
+      --bg-surface: #0f1d2c;
+      --cyan:       #00c2d4;
+      --cyan-dim:   rgba(0,194,212,0.12);
+      --cyan-glow:  rgba(0,194,212,0.25);
+      --white:      #e8f4f8;
+      --muted:      #6a8a9f;
+      --border:     rgba(0,194,212,0.12);
+      --border-mid: rgba(255,255,255,0.06);
+      --font: 'Inter', sans-serif;
+      --radius: 10px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg-deep);
+      color: var(--white);
+      font-family: var(--font);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,194,212,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,194,212,0.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,21,32,0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2.5rem;
+    }
+
+    .logo { display: flex; align-items: center; text-decoration: none; }
+    .logo-img { height: 28px; width: auto; display: block; object-fit: contain; }
+    .logo-divider { width: 1px; height: 22px; background: var(--border-mid); margin: 0 1.2rem; }
+    .logo-sub { font-size: 0.72rem; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+
+    .header-right { display: flex; align-items: center; gap: 0.8rem; }
+
+    .year-badge {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--cyan); border: 1px solid rgba(0,194,212,0.25);
+      padding: 4px 11px; border-radius: 99px; background: var(--cyan-dim);
+    }
+
+    .admin-btn {
+      background: transparent; border: 1px solid var(--border-mid); color: var(--muted);
+      padding: 6px 16px; border-radius: 99px; font-family: var(--font);
+      font-size: 0.78rem; font-weight: 500; cursor: pointer;
+      transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+    }
+    .admin-btn:hover { border-color: rgba(0,194,212,0.4); color: var(--cyan); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative; padding: 5rem 2.5rem 4rem;
+      text-align: center; overflow: hidden; z-index: 1;
+    }
+    .hero-glow {
+      position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+      width: 700px; height: 500px;
+      background: radial-gradient(ellipse, rgba(0,194,212,0.1) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;
+      color: var(--cyan); margin-bottom: 1.4rem;
+      opacity: 0; animation: fadeUp 0.5s ease 0.1s forwards;
+    }
+    .hero-eyebrow::before, .hero-eyebrow::after {
+      content: ''; display: block; width: 28px; height: 1px; background: var(--cyan); opacity: 0.5;
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 4.5vw, 3.4rem); font-weight: 800;
+      line-height: 1.1; letter-spacing: -1px; margin-bottom: 1.1rem;
+      opacity: 0; animation: fadeUp 0.5s ease 0.2s forwards;
+    }
+    .hero h1 span { color: var(--cyan); }
+    .hero p {
+      font-size: 0.95rem; color: var(--muted); max-width: 480px;
+      margin: 0 auto; line-height: 1.75; font-weight: 400;
+      opacity: 0; animation: fadeUp 0.5s ease 0.3s forwards;
+    }
+
+    /* ── MAIN ── */
+    main {
+      position: relative; z-index: 1;
+      padding: 1.5rem 2.5rem 6rem;
+      max-width: 1080px; margin: 0 auto;
+    }
+
+    /* ── ACCORDION ── */
+    .quarter {
+      border: 1px solid var(--border-mid); border-radius: var(--radius);
+      margin-bottom: 0.75rem; overflow: hidden;
+      transition: border-color 0.25s;
+      opacity: 0; animation: fadeUp 0.45s ease forwards;
+    }
+    .quarter:nth-child(1){animation-delay:0.35s}
+    .quarter:nth-child(2){animation-delay:0.45s}
+    .quarter:nth-child(3){animation-delay:0.55s}
+    .quarter:nth-child(4){animation-delay:0.65s}
+    .quarter:hover { border-color: rgba(0,194,212,0.25); }
+    .quarter.open  { border-color: rgba(0,194,212,0.35); }
+
+    .quarter-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.3rem 1.6rem; cursor: pointer; background: var(--bg-surface);
+      user-select: none; transition: background 0.2s;
+    }
+    .quarter-header:hover, .quarter.open .quarter-header { background: var(--bg-card); }
+
+    .quarter-left { display: flex; align-items: center; gap: 1rem; }
+    .q-tag {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--cyan); border: 1px solid rgba(0,194,212,0.3);
+      background: var(--cyan-dim); padding: 3px 10px; border-radius: 4px;
+    }
+    .q-title  { font-size: 0.96rem; font-weight: 600; letter-spacing: -0.2px; }
+    .q-months { font-size: 0.78rem; color: var(--muted); font-weight: 400; }
+
+    .quarter-right { display: flex; align-items: center; gap: 1rem; }
+    .q-count { font-size: 0.78rem; color: var(--muted); }
+
+    .chevron {
+      width: 28px; height: 28px; border: 1px solid var(--border-mid); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.3s, border-color 0.2s; flex-shrink: 0;
+    }
+    .quarter.open .chevron { transform: rotate(180deg); border-color: rgba(0,194,212,0.4); }
+    .chevron svg { width: 12px; height: 12px; color: var(--muted); }
+    .quarter.open .chevron svg { color: var(--cyan); }
+
+    .quarter-body {
+      display: grid; grid-template-rows: 0fr;
+      transition: grid-template-rows 0.35s ease; background: var(--bg-deep);
+    }
+    .quarter.open .quarter-body { grid-template-rows: 1fr; }
+    .quarter-inner { overflow: hidden; }
+
+    .cards-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 0.9rem; padding: 1.4rem 1.6rem;
+    }
+    .empty-state {
+      padding: 2.5rem; text-align: center; color: var(--muted); font-size: 0.85rem;
+    }
+
+    /* ── CERT SECTIONS (obrigatórias / opcionais) ── */
+    .cert-section { padding: 0 1.6rem 1.4rem; }
+    .cert-section:first-child { padding-top: 1.4rem; }
+    .cert-section-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 1rem; padding-bottom: 0.55rem;
+      border-bottom: 1px solid var(--border-mid);
+    }
+    .cert-section-label {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 1.8px;
+      text-transform: uppercase;
+    }
+    .cert-section-label.obrigatorias { color: var(--cyan); }
+    .cert-section-label.opcionais    { color: var(--muted); }
+    .cert-section-dot {
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    }
+    .cert-section-dot.obrigatorias { background: var(--cyan); }
+    .cert-section-dot.opcionais    { background: var(--muted); opacity: 0.5; }
+    .cert-section-count {
+      margin-left: auto; font-size: 0.72rem; color: var(--muted);
+    }
+    .cert-section-empty {
+      color: var(--muted); font-size: 0.82rem; padding: 0.8rem 0;
+      font-style: italic; opacity: 0.6;
+    }
+
+    /* Admin: tipo selector */
+    .tipo-selector { display: flex; gap: 6px; }
+    .tipo-option {
+      flex: 1; padding: 7px 10px; border-radius: 6px; font-size: 0.78rem;
+      font-weight: 600; border: 1px solid var(--border-mid); color: var(--muted);
+      background: transparent; cursor: pointer; transition: all 0.15s;
+      text-align: center; user-select: none;
+    }
+    .tipo-option:hover { border-color: rgba(0,194,212,0.3); color: var(--white); }
+    .tipo-option.selected-obrig {
+      background: rgba(0,194,212,0.12); border-color: rgba(0,194,212,0.5); color: var(--cyan);
+    }
+    .tipo-option.selected-opcio {
+      background: rgba(106,138,159,0.1); border-color: rgba(106,138,159,0.35); color: #a0b8c8;
+    }
+    .admin-cert-tipo {
+      display: inline-block; font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 2px 7px; border-radius: 3px; margin-top: 3px;
+    }
+    .admin-cert-tipo.obrigatorias {
+      background: rgba(0,194,212,0.1); color: var(--cyan); border: 1px solid rgba(0,194,212,0.2);
+    }
+    .admin-cert-tipo.opcionais {
+      background: rgba(106,138,159,0.08); color: var(--muted); border: 1px solid rgba(106,138,159,0.2);
+    }
+
+    /* ── CARD ── */
+    .cert-card {
+      background: var(--bg-card); border: 1px solid var(--border-mid);
+      border-radius: 8px; padding: 1.3rem 1.1rem; cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      display: flex; flex-direction: column; gap: 0.75rem;
+      position: relative; overflow: hidden;
+    }
+    .cert-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--cyan), transparent); opacity: 0; transition: opacity 0.2s;
+    }
+    .cert-card:hover {
+      transform: translateY(-3px); border-color: rgba(0,194,212,0.3);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,194,212,0.08);
+    }
+    .cert-card:hover::before { opacity: 1; }
+    .cert-icon {
+      width: 38px; height: 38px; border-radius: 8px;
+      background: var(--cyan-dim); border: 1px solid rgba(0,194,212,0.15);
+      display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .cert-name { font-size: 0.87rem; font-weight: 600; line-height: 1.35; flex: 1; }
+    .cert-cta {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 0.72rem; font-weight: 600; color: var(--cyan);
+      letter-spacing: 0.3px; text-transform: uppercase;
+    }
+
+    /* ── TAGS ── */
+    .cert-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+    .tag {
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.3px;
+      padding: 2px 7px; border-radius: 3px;
+      background: rgba(0,194,212,0.1); border: 1px solid rgba(0,194,212,0.2);
+      color: var(--cyan); white-space: nowrap;
+    }
+    .tag.tag-consulting { background: rgba(99,179,237,0.1);  border-color: rgba(99,179,237,0.25);  color: #63b3ed; }
+    .tag.tag-de         { background: rgba(104,211,145,0.1); border-color: rgba(104,211,145,0.25); color: #68d391; }
+    .tag.tag-ds         { background: rgba(183,148,244,0.1); border-color: rgba(183,148,244,0.25); color: #b794f4; }
+    .tag.tag-infra      { background: rgba(246,173,85,0.1);  border-color: rgba(246,173,85,0.25);  color: #f6ad55; }
+    .tag.tag-liderancas { background: rgba(252,129,74,0.1);  border-color: rgba(252,129,74,0.25);  color: #fc814a; }
+    .tag.tag-todos      { background: rgba(0,194,212,0.1);   border-color: rgba(0,194,212,0.25);   color: var(--cyan); }
+    .tag.tag-outros     { background: rgba(160,174,192,0.1); border-color: rgba(160,174,192,0.2);  color: #a0aec0; }
+    .modal-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 1.1rem; }
+    .tag-selector { display: flex; flex-direction: column; gap: 0.45rem; }
+    .tag-selector > label { font-size: 0.75rem; color: var(--muted); }
+    .tag-options { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag-option {
+      font-size: 0.72rem; font-weight: 600; padding: 4px 10px; border-radius: 4px;
+      border: 1px solid var(--border-mid); color: var(--muted);
+      background: transparent; cursor: pointer; transition: all 0.15s; user-select: none;
+    }
+    .tag-option:hover { border-color: rgba(0,194,212,0.35); color: var(--white); }
+    .tag-option.selected { background: var(--cyan-dim); border-color: rgba(0,194,212,0.5); color: var(--cyan); }
+    .tag-outros-input { margin-top: 4px; display: none; }
+    .tag-outros-input.visible { display: block; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(5,13,22,0.85);
+      backdrop-filter: blur(10px); z-index: 1000;
+      display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--bg-card); border: 1px solid rgba(0,194,212,0.2);
+      border-radius: 14px; padding: 2.2rem 2rem; width: 100%; max-width: 440px;
+      position: relative; transform: translateY(18px) scale(0.97);
+      transition: transform 0.3s ease; box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+    .modal-overlay.active .modal { transform: translateY(0) scale(1); }
+    .modal-close {
+      position: absolute; top: 1.1rem; right: 1.1rem; width: 30px; height: 30px;
+      border: 1px solid var(--border-mid); border-radius: 50%;
+      background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      color: var(--muted); transition: all 0.2s;
+    }
+    .modal-close:hover { border-color: var(--cyan); color: var(--cyan); }
+    .modal-icon {
+      width: 52px; height: 52px; border-radius: 12px;
+      background: var(--cyan-dim); border: 1px solid rgba(0,194,212,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 1.3rem;
+    }
+    .modal-q { font-size: 0.66rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--cyan); margin-bottom: 0.45rem; }
+    .modal-title { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.4px; line-height: 1.25; margin-bottom: 0.85rem; }
+    .modal-desc { font-size: 0.84rem; color: var(--muted); line-height: 1.75; margin-bottom: 1.7rem; }
+    .modal-cta {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: var(--cyan); color: var(--bg-deep); text-decoration: none;
+      padding: 13px 24px; border-radius: 8px; font-weight: 700; font-size: 0.85rem;
+      transition: background 0.2s, transform 0.15s; width: 100%; border: none; cursor: pointer;
+    }
+    .modal-cta:hover { background: #00d8ec; transform: translateY(-1px); }
+
+    /* ── ADMIN ── */
+    .admin-overlay {
+      position: fixed; inset: 0; background: rgba(5,13,22,0.88);
+      backdrop-filter: blur(14px); z-index: 2000;
+      display: flex; align-items: stretch; justify-content: flex-end;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .admin-overlay.active { opacity: 1; pointer-events: all; }
+    .admin-panel {
+      background: var(--bg-mid); border-left: 1px solid rgba(0,194,212,0.15);
+      width: 100%; max-width: 540px; overflow-y: auto;
+      transform: translateX(40px); transition: transform 0.35s ease;
+      display: flex; flex-direction: column;
+    }
+    .admin-overlay.active .admin-panel { transform: translateX(0); }
+    .admin-top {
+      padding: 1.6rem 1.8rem; border-bottom: 1px solid var(--border-mid);
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; background: var(--bg-mid); z-index: 1;
+    }
+    .admin-top h2 { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .admin-top h2 span { color: var(--cyan); }
+
+    .admin-login-wrap {
+      padding: 3rem 2rem; display: flex; flex-direction: column;
+      align-items: center; gap: 1.3rem; text-align: center; flex: 1;
+    }
+    .login-icon {
+      width: 60px; height: 60px; border-radius: 14px;
+      background: var(--cyan-dim); border: 1px solid rgba(0,194,212,0.2);
+      display: flex; align-items: center; justify-content: center; font-size: 1.6rem;
+    }
+    .admin-login-wrap h3 { font-size: 1.15rem; font-weight: 700; }
+    .admin-login-wrap > p { color: var(--muted); font-size: 0.83rem; line-height: 1.6; }
+
+    .input-wrap { width: 100%; display: flex; flex-direction: column; gap: 0.45rem; }
+    .input-wrap label { font-size: 0.75rem; color: var(--muted); font-weight: 500; }
+    .dp6-input {
+      background: var(--bg-deep); border: 1px solid var(--border-mid);
+      color: var(--white); padding: 10px 13px; border-radius: 7px;
+      font-family: var(--font); font-size: 0.875rem; outline: none;
+      transition: border-color 0.2s; width: 100%;
+    }
+    .dp6-input:focus { border-color: rgba(0,194,212,0.5); }
+    .dp6-input::placeholder { color: #3a5568; }
+
+    .btn-primary {
+      background: var(--cyan); color: var(--bg-deep); border: none;
+      padding: 11px 22px; border-radius: 7px; font-family: var(--font);
+      font-weight: 700; font-size: 0.85rem; cursor: pointer;
+      transition: background 0.2s, transform 0.15s; width: 100%;
+    }
+    .btn-primary:hover { background: #00d8ec; transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent; border: 1px solid var(--border-mid); color: var(--muted);
+      padding: 8px 16px; border-radius: 7px; font-family: var(--font); font-size: 0.8rem; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-ghost:hover { border-color: rgba(0,194,212,0.35); color: var(--cyan); }
+    .btn-edit {
+      background: transparent; border: 1px solid var(--border-mid); color: var(--muted);
+      padding: 5px 10px; border-radius: 5px; font-size: 0.74rem; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-edit:hover { border-color: rgba(0,194,212,0.35); color: var(--cyan); }
+    .btn-danger {
+      background: transparent; border: 1px solid rgba(255,80,80,0.2); color: rgba(255,100,100,0.7);
+      padding: 5px 10px; border-radius: 5px; font-size: 0.74rem; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-danger:hover { background: rgba(255,60,60,0.08); border-color: rgba(255,80,80,0.4); color: #ff6060; }
+
+    .admin-content { padding: 1.4rem 1.8rem; flex: 1; }
+    .admin-quarter-section { margin-bottom: 2rem; }
+    .admin-section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 0.9rem; padding-bottom: 0.55rem; border-bottom: 1px solid var(--border-mid);
+    }
+    .admin-section-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--cyan); }
+
+    .admin-cert-item {
+      background: var(--bg-deep); border: 1px solid var(--border-mid);
+      border-radius: 7px; padding: 0.8rem 0.9rem; margin-bottom: 0.45rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .admin-cert-item.editing { border-color: rgba(0,194,212,0.3); flex-direction: column; align-items: stretch; }
+    .admin-cert-info { flex: 1; min-width: 0; }
+    .admin-cert-name { font-size: 0.85rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .admin-cert-url  { font-size: 0.72rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+    .admin-cert-actions { display: flex; gap: 0.35rem; flex-shrink: 0; }
+    .edit-form { display: flex; flex-direction: column; gap: 0.55rem; }
+
+    .add-cert-form {
+      background: rgba(0,194,212,0.04); border: 1px dashed rgba(0,194,212,0.2);
+      border-radius: 7px; padding: 1rem; margin-top: 0.5rem;
+      display: none; flex-direction: column; gap: 0.55rem;
+    }
+    .add-cert-form.visible { display: flex; }
+    .add-cert-form label { font-size: 0.75rem; color: var(--muted); }
+    .login-error { color: #ff6060; font-size: 0.78rem; display: none; }
+
+    footer {
+      position: relative; z-index: 1; text-align: center; padding: 2rem;
+      color: var(--muted); font-size: 0.75rem; border-top: 1px solid var(--border-mid);
+    }
+    .dp6-foot { color: var(--cyan); font-weight: 700; }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg-deep); }
+    ::-webkit-scrollbar-thumb { background: #1e3448; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #2a4560; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 0 1.2rem; }
+      main   { padding: 1.2rem 1.2rem 4rem; }
+      .hero  { padding: 3rem 1.2rem 2rem; }
+      .cards-grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 0.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="#">
+    <img class="logo-img" src="https://dp6.github.io/assets/img/logo-dp6.png" alt="DP6" />
+    <div class="logo-divider"></div>
+    <span class="logo-sub">Certificações</span>
+  </a>
+  <div class="header-right">
+    <span class="year-badge">2025</span>
+    <button class="admin-btn" onclick="openAdmin()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>
+      </svg>
+      Admin
+    </button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-eyebrow">Cronograma Interno · 2025</div>
+  <h1>Certificações<br/><span>DP6 2025</span></h1>
+  <p>Acompanhe todas as certificações do ano, organizadas por trimestre. Clique em um card para acessar o link de inscrição.</p>
+</section>
+
+<main id="quarters-container"></main>
+
+<footer>Portal interno &nbsp;·&nbsp; <img src="https://dp6.github.io/assets/img/logo-dp6.png" alt="DP6" style="height:14px;vertical-align:middle;opacity:0.6;margin:0 2px"/> &nbsp;·&nbsp; 2025</footer>
+
+<!-- CERT MODAL -->
+<div class="modal-overlay" id="cert-modal" onclick="closeCertModalBg(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeCertModalDirect()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="modal-icon" id="modal-icon">📋</div>
+    <div class="modal-q" id="modal-quarter"></div>
+    <div class="modal-title" id="modal-title"></div>
+    <span class="admin-cert-tipo obrigatorias" id="modal-tipo" style="display:inline-block;margin-bottom:0.8rem">⭐ Obrigatória</span>
+    <div class="modal-tags" id="modal-tags"></div>
+    <div class="modal-desc">Acesse o link abaixo para ver os detalhes, material de estudo e realizar a sua inscrição.</div>
+    <a href="#" id="modal-link" class="modal-cta" target="_blank" rel="noopener">
+      Acessar Certificação
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+        <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+      </svg>
+    </a>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="admin-overlay" id="admin-overlay" onclick="closeAdminBg(event)">
+  <div class="admin-panel">
+    <div class="admin-top">
+      <h2>Painel <span>Admin</span></h2>
+      <span id="save-status" style="font-size:.72rem;transition:opacity .5s;opacity:0"></span>
+      <button class="modal-close" onclick="closeAdmin()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="admin-login-wrap" id="admin-login">
+      <div class="login-icon">🔐</div>
+      <h3>Área Restrita</h3>
+      <p>Insira a senha de administrador para gerenciar as certificações.</p>
+      <div class="input-wrap">
+        <label>Senha</label>
+        <input type="password" class="dp6-input" id="admin-password" placeholder="••••••••"
+          onkeydown="if(event.key==='Enter')checkAdminPass()" />
+      </div>
+      <button class="btn-primary" onclick="checkAdminPass()">Entrar</button>
+      <p class="login-error" id="login-error">Senha incorreta. Tente novamente.</p>
+    </div>
+    <div class="admin-content" id="admin-management" style="display:none">
+      <div id="admin-quarters-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── GITHUB CONFIG ────────────────────────────────────────────────────────────
+const GH_USER  = 'rafa-britto-dp6';
+const GH_REPO  = 'dp6-certificacoes';
+const GH_FILE  = 'certs.json';
+const GH_TOKEN = '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';
+const GH_API   = `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`;
+
+const ADMIN_PASS = 'dp6admin2025';
+
+const QUARTER_META = [
+  { id:'q1', label:'Q1', title:'1º Trimestre', months:'Janeiro · Março'   },
+  { id:'q2', label:'Q2', title:'2º Trimestre', months:'Abril · Junho'     },
+  { id:'q3', label:'Q3', title:'3º Trimestre', months:'Julho · Setembro'  },
+  { id:'q4', label:'Q4', title:'4º Trimestre', months:'Outubro · Dezembro'},
+];
+
+const ICONS = ['📊','🎓','🏅','📈','🔍','⚙️','🧠','🚀','🌐','💡','🔧','📐','🛡️','🧩','🔬','📡'];
+
+// Predefined tag options
+const TAG_OPTIONS = [
+  { id:'consulting', label:'Consulting / BA',        cls:'tag-consulting' },
+  { id:'de',         label:'DE',                     cls:'tag-de'         },
+  { id:'ds',         label:'DS',                     cls:'tag-ds'         },
+  { id:'infra',      label:'Infra / Help Desk',       cls:'tag-infra'      },
+  { id:'liderancas', label:'Lideranças / Managers',   cls:'tag-liderancas' },
+  { id:'todos',      label:'Todos',                   cls:'tag-todos'      },
+  { id:'outros',     label:'Outros',                  cls:'tag-outros'     },
+];
+
+function tagHtml(tags) {
+  if (!tags || !tags.length) return '';
+  return tags.map(t => {
+    const opt = TAG_OPTIONS.find(o => o.id === t.id);
+    const cls = opt ? opt.cls : 'tag-outros';
+    const label = t.id === 'outros' ? (t.custom || 'Outros') : (opt ? opt.label : t.id);
+    return `<span class="tag ${cls}">${esc(label)}</span>`;
+  }).join('');
+}
+
+function defaultData() {
+  return {
+    q1: [
+      { id:uid(), name:'Google Analytics 4',     url:'https://skillshop.credential.net/path/google-analytics', tags:[{id:'consulting'},{id:'ds'}], tipo:'obrigatorias' },
+      { id:uid(), name:'Google Ads Fundamentos', url:'https://skillshop.credential.net/path/google-ads',        tags:[{id:'consulting'}],          tipo:'obrigatorias' },
+      { id:uid(), name:'Looker Studio',          url:'https://skillshop.credential.net/path/looker-studio',     tags:[{id:'todos'}],                tipo:'opcionais' },
+    ],
+    q2: [
+      { id:uid(), name:'BigQuery ML',          url:'https://cloud.google.com/training/bigquery',              tags:[{id:'de'},{id:'ds'}], tipo:'obrigatorias' },
+      { id:uid(), name:'Tag Manager Avançado', url:'https://skillshop.credential.net/path/tag-manager',       tags:[{id:'consulting'}],  tipo:'opcionais' },
+    ],
+    q3: [
+      { id:uid(), name:'dbt Core',                       url:'https://courses.getdbt.com/courses/fundamentals',         tags:[{id:'de'}],             tipo:'obrigatorias' },
+      { id:uid(), name:'GCP Professional Data Engineer', url:'https://cloud.google.com/certification/data-engineer',    tags:[{id:'de'},{id:'infra'}], tipo:'opcionais' },
+    ],
+    q4: [
+      { id:uid(), name:'Salesforce Marketing Cloud', url:'https://trailhead.salesforce.com/credentials/marketingcloudadmin', tags:[{id:'consulting'}],              tipo:'obrigatorias' },
+      { id:uid(), name:'AWS Cloud Practitioner',     url:'https://aws.amazon.com/certification/certified-cloud-practitioner/', tags:[{id:'infra'},{id:'de'}], tipo:'opcionais' },
+    ],
+  };
+}
+
+function uid() { return Math.random().toString(36).slice(2,10); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+let data = {};
+let adminAuthed = false;
+let ghFileSha = null; // SHA do arquivo no GitHub, necessário para updates
+
+// ── LOADING STATE ─────────────────────────────────────────────────────────────
+function showLoading(msg) {
+  document.getElementById('quarters-container').innerHTML =
+    `<div style="text-align:center;padding:4rem 2rem;color:var(--muted);font-size:.9rem">
+       <div style="font-size:1.5rem;margin-bottom:.8rem">⏳</div>${msg||'Carregando...'}
+     </div>`;
+}
+function showError(msg) {
+  document.getElementById('quarters-container').innerHTML =
+    `<div style="text-align:center;padding:4rem 2rem;color:#ff6060;font-size:.88rem">
+       <div style="font-size:1.5rem;margin-bottom:.8rem">⚠️</div>${msg}
+     </div>`;
+}
+
+// ── GITHUB API ────────────────────────────────────────────────────────────────
+async function loadFromGitHub() {
+  showLoading('Carregando certificações...');
+  try {
+    const res = await fetch(GH_API + '?t=' + Date.now(), {
+      headers: { 'Authorization': 'token ' + GH_TOKEN, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (res.status === 404) {
+      // Arquivo ainda não existe — usa dados padrão e cria
+      data = defaultData();
+      await saveToGitHub(data, true);
+    } else if (!res.ok) {
+      throw new Error('HTTP ' + res.status);
+    } else {
+      const json = await res.json();
+      ghFileSha = json.sha;
+      data = JSON.parse(atob(json.content.replace(/\n/g, '')));
+    }
+    renderMain();
+  } catch(e) {
+    showError('Erro ao carregar dados do GitHub.<br>Verifique sua conexão e recarregue a página.');
+    console.error(e);
+  }
+}
+
+async function saveToGitHub(newData, isNew) {
+  const body = {
+    message: 'chore: atualiza certificações',
+    content: btoa(unescape(encodeURIComponent(JSON.stringify(newData, null, 2)))),
+  };
+  if (ghFileSha && !isNew) body.sha = ghFileSha;
+
+  const res = await fetch(GH_API, {
+    method: 'PUT',
+    headers: {
+      'Authorization': 'token ' + GH_TOKEN,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || 'Erro ao salvar');
+  }
+  const json = await res.json();
+  ghFileSha = json.content.sha;
+  return json;
+}
+
+async function saveData(newData) {
+  setSaveStatus('saving');
+  try {
+    await saveToGitHub(newData);
+    setSaveStatus('ok');
+  } catch(e) {
+    setSaveStatus('error');
+    console.error(e);
+    throw e;
+  }
+}
+
+// ── SAVE STATUS INDICATOR ─────────────────────────────────────────────────────
+function setSaveStatus(state) {
+  const el = document.getElementById('save-status');
+  if (!el) return;
+  const states = {
+    saving: { text:'Salvando...', color:'var(--muted)' },
+    ok:     { text:'✓ Salvo',     color:'#68d391'       },
+    error:  { text:'⚠ Erro ao salvar', color:'#ff6060'  },
+  };
+  const s = states[state] || {};
+  el.textContent = s.text;
+  el.style.color  = s.color;
+  el.style.opacity = '1';
+  if (state === 'ok') setTimeout(() => { el.style.opacity='0'; }, 3000);
+}
+
+function certCardHtml(c, i, qid) {
+  return `<div class="cert-card" onclick="openCertModal('${c.id}','${qid}')">
+    <div class="cert-icon">${ICONS[i%ICONS.length]}</div>
+    <div class="cert-name">${esc(c.name)}</div>
+    ${c.tags&&c.tags.length?`<div class="cert-tags">${tagHtml(c.tags)}</div>`:''}
+    <div class="cert-cta">Acessar <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+  </div>`;
+}
+
+function renderCertSections(certs, qid) {
+  if (!certs.length) return `<div class="empty-state">Nenhuma certificação cadastrada neste trimestre.</div>`;
+  const obrig = certs.filter(c => (c.tipo||'obrigatorias') === 'obrigatorias');
+  const opcio  = certs.filter(c => c.tipo === 'opcionais');
+  // keep original index for icon consistency
+  const allIds = certs.map(c => c.id);
+  function section(list, tipo, label) {
+    const cards = list.map(c => certCardHtml(c, allIds.indexOf(c.id), qid)).join('');
+    return `
+      <div class="cert-section">
+        <div class="cert-section-header">
+          <div class="cert-section-dot ${tipo}"></div>
+          <span class="cert-section-label ${tipo}">${label}</span>
+          <span class="cert-section-count">${list.length} cert${list.length!==1?'s':'.'}.</span>
+        </div>
+        ${list.length ? `<div class="cards-grid">${cards}</div>` : `<div class="cert-section-empty">Nenhuma certificação nesta seção.</div>`}
+      </div>`;
+  }
+  return section(obrig,'obrigatorias','Certificações Obrigatórias') + section(opcio,'opcionais','Certificações Opcionais');
+}
+
+function renderMain() {
+  const wrap = document.getElementById('quarters-container');
+  wrap.innerHTML = '';
+  QUARTER_META.forEach(q => {
+    const certs = data[q.id]||[];
+    const el = document.createElement('div');
+    el.className='quarter'; el.id='acc-'+q.id;
+    el.innerHTML=`
+      <div class="quarter-header" onclick="toggleQ('${q.id}')">
+        <div class="quarter-left">
+          <span class="q-tag">${q.label}</span>
+          <div><div class="q-title">${q.title}</div><div class="q-months">${q.months}</div></div>
+        </div>
+        <div class="quarter-right">
+          <span class="q-count">${certs.length} cert${certs.length!==1?'s':'.'}.</span>
+          <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
+        </div>
+      </div>
+      <div class="quarter-body"><div class="quarter-inner">
+        ${renderCertSections(certs, q.id)}
+      </div></div>`;
+    wrap.appendChild(el);
+  });
+}
+
+function toggleQ(qid) { document.getElementById('acc-'+qid).classList.toggle('open'); }
+
+function openCertModal(certId,qid) {
+  const certs=data[qid]||[], cert=certs.find(c=>c.id===certId); if(!cert)return;
+  const q=QUARTER_META.find(q=>q.id===qid), idx=certs.indexOf(cert);
+  document.getElementById('modal-icon').textContent=ICONS[idx%ICONS.length];
+  document.getElementById('modal-quarter').textContent=q.label+' · '+q.title;
+  document.getElementById('modal-title').textContent=cert.name;
+  document.getElementById('modal-tipo').className='admin-cert-tipo '+(cert.tipo||'obrigatorias');
+  document.getElementById('modal-tipo').textContent=(cert.tipo||'obrigatorias')==='obrigatorias'?'⭐ Obrigatória':'Opcional';
+  document.getElementById('modal-tags').innerHTML=cert.tags&&cert.tags.length?tagHtml(cert.tags):'';
+  document.getElementById('modal-link').href=cert.url;
+  document.getElementById('cert-modal').classList.add('active');
+}
+function closeCertModalBg(e){if(e.target===document.getElementById('cert-modal'))document.getElementById('cert-modal').classList.remove('active');}
+function closeCertModalDirect(){document.getElementById('cert-modal').classList.remove('active');}
+
+function openAdmin(){
+  document.getElementById('admin-overlay').classList.add('active');
+  if(!adminAuthed){document.getElementById('admin-login').style.display='flex';document.getElementById('admin-management').style.display='none';setTimeout(()=>document.getElementById('admin-password').focus(),300);}
+}
+function closeAdmin(){document.getElementById('admin-overlay').classList.remove('active');}
+function closeAdminBg(e){if(e.target===document.getElementById('admin-overlay'))closeAdmin();}
+
+function checkAdminPass(){
+  if(document.getElementById('admin-password').value===ADMIN_PASS){
+    adminAuthed=true;
+    document.getElementById('admin-login').style.display='none';
+    document.getElementById('admin-management').style.display='block';
+    renderAdminPanel();
+  } else {
+    document.getElementById('login-error').style.display='block';
+    document.getElementById('admin-password').value='';
+  }
+}
+
+function tipoSelectorHtml(selectedTipo) {
+  const val = selectedTipo || 'obrigatorias';
+  return `
+    <div style="display:flex;flex-direction:column;gap:.45rem">
+      <label style="font-size:.75rem;color:var(--muted)">Tipo</label>
+      <div class="tipo-selector" id="tipo-sel">
+        <div class="tipo-option${val==='obrigatorias'?' selected-obrig':''}" onclick="selectTipo(this,'obrigatorias')" data-tipo="obrigatorias">⭐ Obrigatória</div>
+        <div class="tipo-option${val==='opcionais'?' selected-opcio':''}"    onclick="selectTipo(this,'opcionais')"    data-tipo="opcionais">Opcional</div>
+      </div>
+    </div>`;
+}
+
+function selectTipo(el, tipo) {
+  const parent = el.closest('.tipo-selector');
+  parent.querySelectorAll('.tipo-option').forEach(o => o.classList.remove('selected-obrig','selected-opcio'));
+  el.classList.add(tipo==='obrigatorias'?'selected-obrig':'selected-opcio');
+}
+
+function collectTipo() {
+  const sel = document.querySelector('.tipo-selector .selected-obrig, .tipo-selector .selected-opcio');
+  return sel ? sel.dataset.tipo : 'obrigatorias';
+}
+
+function tagSelectorHtml(prefix, selectedTags) {
+  const sel = selectedTags || [];
+  const opts = TAG_OPTIONS.map(t => {
+    const isSelected = sel.some(s => s.id === t.id);
+    return `<span class="tag-option${isSelected?' selected':''}" data-id="${t.id}" onclick="toggleTag(this,'${prefix}')">${esc(t.label)}</span>`;
+  }).join('');
+  const hasOutros = sel.some(s => s.id === 'outros');
+  const outrosVal = (sel.find(s => s.id === 'outros') || {}).custom || '';
+  return `
+    <div class="tag-selector">
+      <label>Times / Áreas</label>
+      <div class="tag-options" id="tag-opts-${prefix}">${opts}</div>
+      <div class="tag-outros-input${hasOutros?' visible':''}" id="tag-outros-wrap-${prefix}">
+        <input type="text" class="dp6-input" id="tag-outros-val-${prefix}"
+          value="${esc(outrosVal)}" placeholder="Especifique a área..." style="font-size:.8rem;padding:7px 10px;margin-top:4px"/>
+      </div>
+    </div>`;
+}
+
+function toggleTag(el, prefix) {
+  el.classList.toggle('selected');
+  const outrosWrap = document.getElementById('tag-outros-wrap-'+prefix);
+  const outrosSelected = document.querySelector(`#tag-opts-${prefix} [data-id="outros"]`);
+  if (outrosWrap) {
+    outrosWrap.classList.toggle('visible', outrosSelected && outrosSelected.classList.contains('selected'));
+  }
+}
+
+function collectTags(prefix) {
+  const selected = document.querySelectorAll(`#tag-opts-${prefix} .tag-option.selected`);
+  return Array.from(selected).map(el => {
+    const id = el.dataset.id;
+    if (id === 'outros') {
+      const custom = (document.getElementById('tag-outros-val-'+prefix)||{}).value||'';
+      return { id, custom: custom.trim() };
+    }
+    return { id };
+  });
+}
+
+function renderAdminPanel(){
+  const list=document.getElementById('admin-quarters-list'); list.innerHTML='';
+  QUARTER_META.forEach(q=>{
+    const certs=data[q.id]||[], sec=document.createElement('div');
+    sec.className='admin-quarter-section'; sec.id='admsec-'+q.id;
+    sec.innerHTML=`
+      <div class="admin-section-header">
+        <span class="admin-section-title">${q.label} · ${q.title}</span>
+        <button class="btn-ghost" style="font-size:.75rem;padding:5px 12px" onclick="showAddForm('${q.id}')">+ Adicionar</button>
+      </div>
+      <div id="admcerts-${q.id}">
+        ${certs.length===0?`<p style="color:var(--muted);font-size:.8rem;margin-bottom:.5rem">Nenhuma certificação.</p>`
+          :certs.map(c=>`
+            <div class="admin-cert-item" id="admitem-${c.id}">
+              <div class="admin-cert-info">
+                <div class="admin-cert-name">${esc(c.name)}</div>
+                <div class="admin-cert-url">${esc(c.url)}</div>
+                <span class="admin-cert-tipo ${c.tipo||'obrigatorias'}">${(c.tipo||'obrigatorias')==='obrigatorias'?'⭐ Obrigatória':'Opcional'}</span>
+                ${c.tags&&c.tags.length?`<div class="cert-tags" style="margin-top:5px">${tagHtml(c.tags)}</div>`:''}
+              </div>
+              <div class="admin-cert-actions">
+                <button class="btn-edit" onclick="startEdit('${c.id}','${q.id}')">Editar</button>
+                <button class="btn-danger" onclick="deleteCert('${c.id}','${q.id}')">✕</button>
+              </div>
+            </div>`).join('')}
+      </div>
+      <div class="add-cert-form" id="addform-${q.id}">
+        <label>Nome da Certificação</label>
+        <input type="text" class="dp6-input" id="addname-${q.id}" placeholder="Ex: Google Analytics 4" style="font-size:.82rem;padding:8px 11px"/>
+        <label>URL de Acesso</label>
+        <input type="url" class="dp6-input" id="addurl-${q.id}" placeholder="https://..." style="font-size:.82rem;padding:8px 11px"/>
+        ${tagSelectorHtml('add-'+q.id, [])}
+        ${tipoSelectorHtml('obrigatorias')}
+        <div style="display:flex;gap:.45rem;margin-top:.2rem">
+          <button class="btn-primary" style="padding:9px" onclick="addCert('${q.id}')">Salvar</button>
+          <button class="btn-ghost" onclick="hideAddForm('${q.id}')">Cancelar</button>
+        </div>
+      </div>`;
+    list.appendChild(sec);
+  });
+}
+
+function startEdit(certId,qid){
+  const cert=(data[qid]||[]).find(c=>c.id===certId); if(!cert)return;
+  const el=document.getElementById('admitem-'+certId);
+  el.classList.add('editing');
+  el.innerHTML=`<div class="edit-form">
+    <input type="text" class="dp6-input" id="ename-${certId}" value="${esc(cert.name)}" style="font-size:.82rem;padding:8px 11px"/>
+    <input type="url"  class="dp6-input" id="eurl-${certId}"  value="${esc(cert.url)}"  style="font-size:.82rem;padding:8px 11px"/>
+    ${tagSelectorHtml('edit-'+certId, cert.tags||[])}
+    ${tipoSelectorHtml(cert.tipo||'obrigatorias')}
+    <div style="display:flex;gap:.4rem">
+      <button class="btn-primary" style="flex:1;padding:8px" onclick="saveEdit('${certId}','${qid}')">Salvar</button>
+      <button class="btn-ghost" onclick="renderAdminPanel()">Cancelar</button>
+    </div>
+  </div>`;
+}
+
+async function saveEdit(certId,qid){
+  const name=document.getElementById('ename-'+certId).value.trim();
+  const url=document.getElementById('eurl-'+certId).value.trim();
+  if(!name||!url)return alert('Preencha todos os campos.');
+  const idx=(data[qid]||[]).findIndex(c=>c.id===certId); if(idx===-1)return;
+  const tags=collectTags('edit-'+certId);
+  const tipo=collectTipo();
+  data[qid][idx]={id:certId,name,url,tags,tipo};
+  try {
+    await saveData(data);
+    renderAdminPanel(); renderMain();
+  } catch(e) { alert('Erro ao salvar. Tente novamente.'); }
+}
+
+async function deleteCert(certId,qid){
+  if(!confirm('Remover esta certificação?'))return;
+  data[qid]=(data[qid]||[]).filter(c=>c.id!==certId);
+  try {
+    await saveData(data);
+    renderAdminPanel(); renderMain();
+  } catch(e) { alert('Erro ao salvar. Tente novamente.'); }
+}
+
+function showAddForm(qid){document.getElementById('addform-'+qid).classList.add('visible');document.getElementById('addname-'+qid).focus();}
+function hideAddForm(qid){document.getElementById('addform-'+qid).classList.remove('visible');document.getElementById('addname-'+qid).value='';document.getElementById('addurl-'+qid).value='';}
+
+async function addCert(qid){
+  const name=document.getElementById('addname-'+qid).value.trim();
+  const url=document.getElementById('addurl-'+qid).value.trim();
+  if(!name||!url)return alert('Preencha todos os campos.');
+  const tags=collectTags('add-'+qid);
+  const tipo=collectTipo();
+  data[qid]=data[qid]||[];
+  data[qid].push({id:uid(),name,url,tags,tipo});
+  try {
+    await saveData(data);
+    hideAddForm(qid); renderAdminPanel(); renderMain();
+  } catch(e) { alert('Erro ao salvar. Tente novamente.'); }
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCertModalDirect();closeAdmin();}});
+loadFromGitHub();
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "q1": [
+    { "id": "a1b2c3d4", "name": "Google Analytics 4",     "url": "https://skillshop.credential.net/path/google-analytics", "tags": [{"id":"consulting"},{"id":"ds"}], "tipo": "obrigatorias" },
+    { "id": "e5f6g7h8", "name": "Google Ads Fundamentos", "url": "https://skillshop.credential.net/path/google-ads",        "tags": [{"id":"consulting"}],             "tipo": "obrigatorias" },
+    { "id": "i9j0k1l2", "name": "Looker Studio",          "url": "https://skillshop.credential.net/path/looker-studio",     "tags": [{"id":"todos"}],                  "tipo": "opcionais"    }
+  ],
+  "q2": [
+    { "id": "m3n4o5p6", "name": "BigQuery ML",          "url": "https://cloud.google.com/training/bigquery",        "tags": [{"id":"de"},{"id":"ds"}], "tipo": "obrigatorias" },
+    { "id": "q7r8s9t0", "name": "Tag Manager Avançado", "url": "https://skillshop.credential.net/path/tag-manager", "tags": [{"id":"consulting"}],     "tipo": "opcionais"    }
+  ],
+  "q3": [
+    { "id": "u1v2w3x4", "name": "dbt Core",                       "url": "https://courses.getdbt.com/courses/fundamentals",      "tags": [{"id":"de"}],              "tipo": "obrigatorias" },
+    { "id": "y5z6a7b8", "name": "GCP Professional Data Engineer", "url": "https://cloud.google.com/certification/data-engineer", "tags": [{"id":"de"},{"id":"infra"}],"tipo": "opcionais"    }
+  ],
+  "q4": [
+    { "id": "c9d0e1f2", "name": "Salesforce Marketing Cloud", "url": "https://trailhead.salesforce.com/credentials/marketingcloudadmin",       "tags": [{"id":"consulting"}],      "tipo": "obrigatorias" },
+    { "id": "g3h4i5j6", "name": "AWS Cloud Practitioner",     "url": "https://aws.amazon.com/certification/certified-cloud-practitioner/", "tags": [{"id":"infra"},{"id":"de"}],"tipo": "opcionais"    }
+  ]
+}
