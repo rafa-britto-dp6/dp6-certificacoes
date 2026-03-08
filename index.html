@@ -893,9 +893,10 @@ async function loadFromSupabase(showFeedback = false) {
   } catch(e) {
     console.error('Supabase load error:', e);
     setConnBadge('offline');
-    if (!cached) { store = emptyStore(); updateYearUI(); renderMain(); }
+    store = emptyStore();
+    updateYearUI();
+    renderMain();
     if (showFeedback) dp6Alert('Não foi possível conectar ao Supabase.', 'Erro de conexão', '⚠️');
-    else
   }
 }
 
@@ -914,10 +915,6 @@ async function saveStore() {
   const lbl = document.getElementById('last-sync-label');
   if (lbl) lbl.textContent = '✓ Última sincronização: ' + lastSyncTime.toLocaleTimeString('pt-BR');
   setConnBadge('online');
-}
-
-}
-  setTimeout(() => { if(el) el.style.display='none'; }, 6000);
 }
 
 function initData() {
