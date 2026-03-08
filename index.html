@@ -601,7 +601,6 @@
   <p>Acompanhe todas as certificações do ano, organizadas por trimestre. Clique em um card para acessar o link de inscrição.</p>
 </section>
 
-<div id="main-status" style="display:none;text-align:center;padding:.6rem 1rem;font-size:.8rem;position:sticky;top:64px;z-index:50;background:rgba(10,21,32,0.95);border-bottom:1px solid var(--border-mid)"></div>
 <main id="quarters-container"></main>
 
 <footer>Portal interno &nbsp;·&nbsp; <img src="https://dp6.github.io/assets/img/logo-dp6.png" alt="DP6" style="height:14px;vertical-align:middle;opacity:0.6;margin:0 2px"/> &nbsp;·&nbsp; <span id="footer-year">2026</span></footer>
@@ -755,7 +754,6 @@
 // ── CONFIG ───────────────────────────────────────────────────────────────────
 const EDGE_URL        = 'https://xwrutgqpniphkyjjavjp.supabase.co/functions/v1/dp6-store';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3cnV0Z3FwbmlwaGt5amphdmpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MjY5OTUsImV4cCI6MjA4ODUwMjk5NX0.xmbyLSo-iwLQNdZD7qAdyO6mSCJMcDMOwg30gOerJ_g';
-const STORAGE_KEY = 'dp6_store_v3'; // fallback cache
 
 // ── DP6 MODAL (replaces native alert/confirm) ─────────────────────────────────
 function dp6Alert(msg, title, icon) {
@@ -839,16 +837,10 @@ let store = {};
 let adminAuthed = false;
 let assigningCertId = null; // for assign modal
 
-// ── LOCAL CACHE (fallback while loading) ─────────────────────────────────────
-function getCached() {
-  try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
-}
-function setCache(s) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
-}
+
 
 function emptyStore() {
-  return { activeYear:'2026', adminPass:'dp6admin2025', years:{'2026':{q1:[],q2:[],q3:[],q4:[]}}, bank:[], archive:{} };
+  return { activeYear:'2026', adminPass:'DP6admin2026certificacoes', years:{'2026':{q1:[],q2:[],q3:[],q4:[]}}, bank:[], archive:{} };
 }
 
 // Helpers to get current year data
@@ -862,9 +854,9 @@ let isConnected  = false;
 
 function setConnBadge(state) {
   const map = {
-    loading: { cls:'loading', text:'Conectando...' },
-    online:  { cls:'online',  text:'Online'        },
-    offline: { cls:'offline', text:'Cache local'   },
+    loading: { cls:'loading', text:'Verificando servidor...' },
+    online:  { cls:'online',  text:'Servidor ativo'        },
+    offline: { cls:'offline', text:'Servidor inativo'   },
   };
   const s = map[state] || map.loading;
   ['conn-badge','config-conn-badge'].forEach(id => {
@@ -879,9 +871,6 @@ function setConnBadge(state) {
 // ── SUPABASE API (via Edge Function) ─────────────────────────────────────────
 async function loadFromSupabase(showFeedback = false) {
   setConnBadge('loading');
-  showMainLoading();
-  const cached = getCached();
-  if (cached && !showFeedback) { store = cached; updateYearUI(); renderMain(); }
 
   try {
     const res = await fetch(EDGE_URL, {
@@ -893,11 +882,9 @@ async function loadFromSupabase(showFeedback = false) {
     if (!Array.isArray(rows) || !rows.length) throw new Error('Sem dados');
 
     store = rows[0].data;
-    setCache(store);
     updateYearUI();
     renderMain();
     setConnBadge('online');
-    hideMainLoading();
 
     lastSyncTime = new Date();
     const lbl = document.getElementById('last-sync-label');
@@ -907,14 +894,12 @@ async function loadFromSupabase(showFeedback = false) {
     console.error('Supabase load error:', e);
     setConnBadge('offline');
     if (!cached) { store = emptyStore(); updateYearUI(); renderMain(); }
-    hideMainLoading();
     if (showFeedback) dp6Alert('Não foi possível conectar ao Supabase.', 'Erro de conexão', '⚠️');
-    else showMainError('Usando dados em cache. Verifique a conexão com o Supabase.');
+    else
   }
 }
 
 async function saveStore() {
-  setCache(store);
   const res = await fetch(EDGE_URL, {
     method: 'PATCH',
     headers: {
@@ -931,25 +916,15 @@ async function saveStore() {
   setConnBadge('online');
 }
 
-function showMainLoading() {
-  const el = document.getElementById('main-status');
-  if (el) { el.textContent = '⏳ Carregando...'; el.style.display = 'block'; el.style.color = 'var(--muted)'; }
 }
-function hideMainLoading() {
-  const el = document.getElementById('main-status');
-  if (el) el.style.display = 'none';
-}
-function showMainError(msg) {
-  const el = document.getElementById('main-status');
-  if (el) { el.textContent = '⚠️ ' + msg; el.style.display = 'block'; el.style.color = '#f6ad55'; }
   setTimeout(() => { if(el) el.style.display='none'; }, 6000);
 }
 
 function initData() {
-  store = getCached() || emptyStore(); // ensure store is never empty on init
+  store = emptyStore();
   updateYearUI();
   renderMain();
-  loadFromSupabase(); // then refresh from Sheets in background
+  loadFromSupabase();
 }
 
 function updateYearUI() {
@@ -1049,7 +1024,7 @@ function closeAdmin(){document.getElementById('admin-overlay').classList.remove(
 function closeAdminBg(e){if(e.target===document.getElementById('admin-overlay'))closeAdmin();}
 
 function checkAdminPass(){
-  const correctPass = (store && store.adminPass) ? store.adminPass : 'dp6admin2025';
+  const correctPass = store.adminPass || 'DP6admin2026certificacoes';
   if(document.getElementById('admin-password').value === correctPass){
     adminAuthed=true;
     document.getElementById('admin-login').style.display='none';
