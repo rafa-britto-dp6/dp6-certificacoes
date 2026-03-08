@@ -270,6 +270,7 @@
     .tag.tag-ds         { background: rgba(183,148,244,0.1); border-color: rgba(183,148,244,0.25); color: #b794f4; }
     .tag.tag-infra      { background: rgba(246,173,85,0.1);  border-color: rgba(246,173,85,0.25);  color: #f6ad55; }
     .tag.tag-liderancas { background: rgba(252,129,74,0.1);  border-color: rgba(252,129,74,0.25);  color: #fc814a; }
+    .tag.tag-mt         { background: rgba(236,72,153,0.1);  border-color: rgba(236,72,153,0.25);  color: #ec4899; }
     .tag.tag-todos      { background: rgba(0,194,212,0.1);   border-color: rgba(0,194,212,0.25);   color: var(--cyan); }
     .tag.tag-outros     { background: rgba(160,174,192,0.1); border-color: rgba(160,174,192,0.2);  color: #a0aec0; }
     .modal-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 1.1rem; }
@@ -808,13 +809,14 @@ const ICONS = ['📊','🎓','🏅','📈','🔍','⚙️','🧠','🚀','🌐',
 
 // Predefined tag options
 const TAG_OPTIONS = [
-  { id:'consulting', label:'Consulting / BA',        cls:'tag-consulting' },
-  { id:'de',         label:'DE',                     cls:'tag-de'         },
-  { id:'ds',         label:'DS',                     cls:'tag-ds'         },
-  { id:'infra',      label:'Infra / Help Desk',       cls:'tag-infra'      },
-  { id:'liderancas', label:'Lideranças / Managers',   cls:'tag-liderancas' },
-  { id:'todos',      label:'Todos',                   cls:'tag-todos'      },
-  { id:'outros',     label:'Outros',                  cls:'tag-outros'     },
+  { id:'consulting', label:'Consulting / BA',  cls:'tag-consulting' },
+  { id:'de',         label:'DE',               cls:'tag-de'         },
+  { id:'ds',         label:'DS',               cls:'tag-ds'         },
+  { id:'infra',      label:'Infra / Help Desk', cls:'tag-infra'      },
+  { id:'liderancas', label:'Liderança',         cls:'tag-liderancas' },
+  { id:'mt',         label:'MT',               cls:'tag-mt'         },
+  { id:'todos',      label:'Todos',             cls:'tag-todos'      },
+  { id:'outros',     label:'Outros',            cls:'tag-outros'     },
 ];
 
 function tagHtml(tags) {
